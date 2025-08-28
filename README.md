@@ -17,6 +17,3 @@ Add this repository to your `composer.json`:
     }
 ]
 
-## License
-
-This package is licensed under the MIT License
