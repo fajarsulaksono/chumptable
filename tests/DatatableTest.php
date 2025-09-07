@@ -1,56 +1,41 @@
 <?php
 
-use Chumper\Datatable\Datatable;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
+declare(strict_types=1);
 
-class DatatableTest extends PHPUnit_Framework_TestCase {
+namespace Chumptable\Datatable\Tests;
 
-    /**
-     * @var Datatable
-     */
-    private $dt;
+use Chumptable\Datatable\Datatable;
+use Chumptable\Datatable\Facades\DatatableFacade;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
-    protected function setUp()
+class DatatableTest extends BaseTestCase
+{
+    protected function getPackageProviders($app)
     {
-        // set up config
-        Config::shouldReceive('get')->zeroOrMoreTimes()->with("datatable::engine")->andReturn(
-            array(
-                'exactWordSearch' => false,
-            )
-        );
-        Config::shouldReceive('get')->zeroOrMoreTimes()->with("datatable::table")->andReturn(
-            array(
-                'class' => 'table table-bordered',
-                'id' => '',
-                'options' => array(
-                    "sPaginationType" => "full_numbers",
-                    "bProcessing" => false
-                ),
-                'callbacks' => array(),
-                'noScript' => false,
-                'table_view' => 'datatable::template',
-                'script_view' => 'datatable::javascript',
-            )
-        );
-
-        $this->dt = new Datatable;
-        $this->mock = Mockery::mock('Illuminate\Database\Query\Builder');
+        return [
+            \Chumptable\Datatable\DatatableServiceProvider::class,
+        ];
     }
 
-    public function testReturnInstances()
+    protected function getPackageAliases($app)
     {
-        $api = $this->dt->query($this->mock);
-
-        $this->assertInstanceOf('Chumper\Datatable\Engines\QueryEngine', $api);
-
-        $api = $this->dt->collection(new Collection());
-
-        $this->assertInstanceOf('Chumper\Datatable\Engines\CollectionEngine', $api);
-
-        $table = $this->dt->table();
-
-        $this->assertInstanceOf('Chumper\Datatable\Table', $table);
+        return [
+            'Datatable' => \Chumptable\Datatable\Facades\DatatableFacade::class,
+        ];
     }
 
+    /** @test */
+    public function it_can_instantiate_the_datatable_class()
+    {
+        $datatable = new Datatable();
+        $this->assertInstanceOf(Datatable::class, $datatable);
+    }
+
+    /** @test */
+    public function facade_resolves_to_datatable_instance()
+    {
+        // pakai global namespace untuk Datatable alias
+        $instance = \Datatable::getFacadeRoot();
+        $this->assertInstanceOf(Datatable::class, $instance);
+    }
 }

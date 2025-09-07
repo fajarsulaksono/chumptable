@@ -1,13 +1,16 @@
 <?php
 
-use Chumper\Datatable\Columns\TextColumn;
+namespace Tests\Columns;
 
-class TextColumnTest extends PHPUnit_Framework_TestCase {
+use Chumptable\Datatable\Columns\TextColumn;
+use Orchestra\Testbench\TestCase;
 
+class TextColumnTest extends TestCase
+{
     public function testWorking()
     {
         $column = new TextColumn('foo', 'FooBar');
-        $this->assertEquals('FooBar', $column->run(array()));
-    }
 
+        $this->assertEquals('FooBar', $column->run([]));
+    }
 }

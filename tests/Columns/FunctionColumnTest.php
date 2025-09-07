@@ -1,31 +1,35 @@
 <?php
 
-use Chumper\Datatable\Columns\FunctionColumn;
+namespace Tests\Columns;
 
-class FunctionColumnTest extends PHPUnit_Framework_TestCase {
-
+use Chumptable\Datatable\Columns\FunctionColumn;
+use Orchestra\Testbench\TestCase;
+class FunctionColumnTest extends TestCase
+{
     public function testSimple()
     {
-        $column = new FunctionColumn('foo',function($model){
+        $column = new FunctionColumn('foo', function ($model) {
             return "FooBar";
         });
-        $this->assertEquals('FooBar', $column->run(array()));
+
+        $this->assertEquals('FooBar', $column->run([]));
     }
 
     public function testAdvanced()
     {
-        $column = new FunctionColumn('foo',function($model){
+        $column = new FunctionColumn('foo', function ($model) {
             return $model['text'];
         });
-        $this->assertEquals('FooBar', $column->run(array('text' => 'FooBar')));
+
+        $this->assertEquals('FooBar', $column->run(['text' => 'FooBar']));
     }
 
     public function testAdvanced2()
     {
-        $column = new FunctionColumn('foo',function($model){
-            return $model['text'].'Bar';
+        $column = new FunctionColumn('foo', function ($model) {
+            return $model['text'] . 'Bar';
         });
-        $this->assertEquals('FooBar', $column->run(array('text' => 'Foo')));
-    }
 
+        $this->assertEquals('FooBar', $column->run(['text' => 'Foo']));
+    }
 }

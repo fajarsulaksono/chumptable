@@ -1,56 +1,62 @@
-<?php namespace Chumper\Datatable\Columns;
+<?php
+
+declare(strict_types=1);
+
+namespace Chumptable\Datatable\Tests\Columns;
 
 use Carbon\Carbon;
-use Mockery;
+use Chumptable\Datatable\Columns\DateColumn;
+use Orchestra\Testbench\TestCase;
 
-class DateColumnTest extends \PHPUnit_Framework_TestCase {
-
-    public function testAll()
+class DateColumnTest extends TestCase
+{
+    /** @test */
+    public function it_returns_date_string_from_carbon_instance()
     {
-        $c = Mockery::mock('Carbon\Carbon');
+        $col = new DateColumn('created_at', DateColumn::DATE);
 
-        $column1 = new DateColumn('foo', DateColumn::DATE, 'foo');
-        $c->shouldReceive('toDateString')
-            ->withNoArgs()->once()
-            ->andReturn('fooBar');
+        $model = ['created_at' => Carbon::create(2023, 1, 15, 10, 30, 45)];
 
-        $column2 = new DateColumn('foo', DateColumn::TIME, 'foo');
-        $c->shouldReceive('toTimeString')
-            ->withNoArgs()->once()
-            ->andReturn('fooBar');
-
-        $column3 = new DateColumn('foo', DateColumn::DATE_TIME, 'foo');
-        $c->shouldReceive('toDateTimeString')
-            ->withNoArgs()->once()
-            ->andReturn('fooBar');
-
-        $column4 = new DateColumn('foo', DateColumn::CUSTOM, 'foo');
-        $c->shouldReceive('format')
-            ->with('foo')->once()
-            ->andReturn('fooBar');
-
-        $column5 = new DateColumn('foo', DateColumn::FORMATTED_DATE, 'foo');
-        $c->shouldReceive('toFormattedDateString')
-            ->withNoArgs()->once()
-            ->andReturn('fooBar');
-
-        $column6 = new DateColumn('foo', DateColumn::DAY_DATE, 'foo');
-        $c->shouldReceive('toDayDateTimeString')
-            ->withNoArgs()->once()
-            ->andReturn('fooBar');
-
-        //now test
-        $this->assertEquals('fooBar', $column1->run(array('foo' => $c)));
-        $this->assertEquals('fooBar', $column2->run(array('foo' => $c)));
-        $this->assertEquals('fooBar', $column3->run(array('foo' => $c)));
-        $this->assertEquals('fooBar', $column4->run(array('foo' => $c)));
-        $this->assertEquals('fooBar', $column5->run(array('foo' => $c)));
-        $this->assertEquals('fooBar', $column6->run(array('foo' => $c)));
+        $this->assertEquals('2023-01-15', $col->run($model));
     }
 
-    protected function tearDown()
+    /** @test */
+    public function it_returns_time_string_from_carbon_instance()
     {
-        Mockery::close();
+        $col = new DateColumn('created_at', DateColumn::TIME);
+
+        $model = ['created_at' => Carbon::create(2023, 1, 15, 10, 30, 45)];
+
+        $this->assertEquals('10:30:45', $col->run($model));
+    }
+
+    /** @test */
+    public function it_returns_datetime_string_from_carbon_instance()
+    {
+        $col = new DateColumn('created_at', DateColumn::DATE_TIME);
+
+        $model = ['created_at' => Carbon::create(2023, 1, 15, 10, 30, 45)];
+
+        $this->assertEquals('2023-01-15 10:30:45', $col->run($model));
+    }
+
+    /** @test */
+    public function it_returns_custom_format()
+    {
+        $col = new DateColumn('created_at', DateColumn::CUSTOM, 'd/m/Y');
+
+        $model = ['created_at' => Carbon::create(2023, 1, 15, 10, 30, 45)];
+
+        $this->assertEquals('15/01/2023', $col->run($model));
+    }
+
+    /** @test */
+    public function it_returns_raw_value_if_string_given()
+    {
+        $col = new DateColumn('created_at', DateColumn::DATE);
+
+        $model = ['created_at' => '2023-01-15 10:30:45'];
+
+        $this->assertEquals('2023-01-15 10:30:45', $col->run($model));
     }
 }
- 

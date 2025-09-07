@@ -1,6 +1,9 @@
-<?php namespace Chumper\Datatable\Engines;
+<?php
+
+namespace Chumptable\Datatable\Engines;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * This handles the collections,
@@ -8,7 +11,7 @@ use Illuminate\Support\Collection;
  * do all the operations
  *
  * Class CollectionEngine
- * @package Chumper\Datatable\Engines
+ * @package Chumptable\Datatable\Engines
  */
 class CollectionEngine extends BaseEngine {
 
@@ -196,15 +199,14 @@ class CollectionEngine extends BaseEngine {
                 }
                 if($caseSensitive)
                 {
-                    if($self->exactWordSearch)
-                    {
-                        if($toSearch[$i] === $search)
+                    if ($self->exactWordSearch) {
+                        if ($toSearch[$i] === $search) {
                             $stack[$i] = true;
-                    }
-                    else
-                    {
-                        if(str_contains($search,$toSearch[$i]))
+                        }
+                    } else {
+                        if (Str::contains($search, $toSearch[$i])) {
                             $stack[$i] = true;
+                        }
                     }
                 }
                 else
@@ -239,33 +241,32 @@ class CollectionEngine extends BaseEngine {
 
     private function doInternalOrder()
     {
-        if(is_null($this->orderColumn))
+        if (is_null($this->orderColumn)) {
             return;
+        }
 
-        // Bug added on pull request #309
         $column = array_values($this->orderColumn)[0];
         $direction = array_values($this->orderDirection)[0];
         $stripOrder = $this->options['stripOrder'];
 
         $sortFunction = 'sortBy';
-        if ($direction == BaseEngine::ORDER_DESC)
+        if ($direction == BaseEngine::ORDER_DESC) {
             $sortFunction = 'sortByDesc';
+        }
 
-        $this->workingCollection->{$sortFunction}(function($row) use ($column,$stripOrder) {
+        $this->workingCollection = $this->workingCollection->{$sortFunction}(function ($row) use ($column, $stripOrder) {
 
-            if($this->getAliasMapping())
-            {
+            if ($this->getAliasMapping()) {
                 $column = $this->getNameByIndex($column[0]);
                 return $row[$column];
             }
-            if($stripOrder)
-            {
+
+            if ($stripOrder) {
                 return strip_tags($row[$column]);
-            }
-            else
-            {
-                if (is_array($column))
+            } else {
+                if (is_array($column)) {
                     return $row[$column[0]];
+                }
                 return $row[$column];
             }
         });
