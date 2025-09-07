@@ -1,5 +1,5 @@
 {
-    "name": "fajarsulaksono/chumptable",
+    "name": "chumptable/datatable",
     "description": "This is a Laravel package for the server and client side of datatables at http://datatables.net/",
     "keywords": [
         "laravel",
@@ -17,6 +17,7 @@
             "role": "Developer"
         }
     ],
+    "version": "1.0.0",
     "require": {
         "php": "^7.2|^8.0",
         "illuminate/support": "^5.0|^6.0|^7.0|^8.0|^9.0",
