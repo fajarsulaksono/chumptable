@@ -18,7 +18,7 @@ class DummyEngine extends BaseEngine
 {
     protected $data = [
         ['Fajar', 30],
-        ['Rina', 25],
+        ['Sekar', 25],
     ];
 
     public function makeCollection()
@@ -38,7 +38,7 @@ class DummyEngine extends BaseEngine
     {
         return collect([
             ['Fajar', 30],
-            ['Rina', 25],
+            ['Sekar', 25],
         ]);
     }
 }
@@ -632,7 +632,7 @@ class BaseEngineTest extends TestCase
 
         $this->assertArrayHasKey('aaData', $json);
         $this->assertEquals(2, $json['iTotalRecords']);
-        $this->assertEquals([['Fajar', 30], ['Rina', 25]], $json['aaData']);
+        $this->assertEquals([['Fajar', 30], ['Sekar', 25]], $json['aaData']);
     }
 
     /** @test */
@@ -645,6 +645,6 @@ class BaseEngineTest extends TestCase
 
         $this->assertArrayHasKey('data', $json);
         $this->assertEquals(2, $json['recordsTotal']);
-        $this->assertEquals([['Fajar', 30], ['Rina', 25]], $json['data']);
+        $this->assertEquals([['Fajar', 30], ['Sekar', 25]], $json['data']);
     }
 }
