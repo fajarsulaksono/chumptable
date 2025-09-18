@@ -7,13 +7,7 @@ This is a maintained fork of [Chumper/Datatable](https://github.com/Chumper/Data
 
 ## Installation
 
-Add this repository to your `composer.json`:
 
-```json
-"repositories": [
-    {
-        "type": "vcs",
-        "url": "https://github.com/fajarsulaksono/chumptable"
-    }
-]
+```php
+composer require chumptable/datatable
 
