@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  push:
+    branches: [master, 'feature/*']
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        laravel: [9, 10, 11, 12, 13]
+        php: ['8.0', '8.1', '8.2', '8.3', '8.4']
+        exclude:
+          # Laravel 10 needs PHP ^8.1
+          - php: '8.0'
+            laravel: 10
+          # Laravel 11 needs PHP ^8.2
+          - php: '8.0'
+            laravel: 11
+          - php: '8.1'
+            laravel: 11
+          # Laravel 12 needs PHP ^8.2
+          - php: '8.0'
+            laravel: 12
+          - php: '8.1'
+            laravel: 12
+          # Laravel 13 needs PHP ^8.2
+          - php: '8.0'
+            laravel: 13
+          - php: '8.1'
+            laravel: 13
+
+    name: Laravel ${{ matrix.laravel }} - PHP ${{ matrix.php }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          tools: composer
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:^${{ matrix.laravel }}.0" "orchestra/testbench:^$((matrix.laravel - 3)).0" --no-interaction --no-update
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Execute tests
+        run: vendor/bin/phpunit --colors=always
