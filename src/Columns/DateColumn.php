@@ -15,10 +15,15 @@ class DateColumn extends BaseColumn
      * Constants for the time representation.
      */
     public const DATE = 0;
+
     public const TIME = 1;
+
     public const DATE_TIME = 2;
+
     public const CUSTOM = 4;
+
     public const FORMATTED_DATE = 5;
+
     public const DAY_DATE = 6;
 
     /**
@@ -37,10 +42,6 @@ class DateColumn extends BaseColumn
 
     /**
      * DateColumn constructor.
-     *
-     * @param string $name
-     * @param int    $format
-     * @param string $custom
      */
     public function __construct(string $name, int $format = self::DATE_TIME, string $custom = '')
     {
@@ -52,8 +53,8 @@ class DateColumn extends BaseColumn
     /**
      * Run the column transformation.
      *
-     * @param mixed $model The data to pass to the column,
-     *                     could be a model or an array.
+     * @param  mixed  $model  The data to pass to the column,
+     *                        could be a model or an array.
      * @return mixed
      */
     public function run($model)
@@ -67,8 +68,9 @@ class DateColumn extends BaseColumn
         // Handle string date values
         if (is_string($value)) {
             if ($this->custom) {
-                return strftime($this->custom, strtotime($value));
+                return date($this->custom, strtotime($value));
             }
+
             return $value;
         }
 

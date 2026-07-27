@@ -2,23 +2,22 @@
 
 namespace Chumptable\Datatable;
 
-use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Support\Collection;
-use Chumptable\Datatable\Engines\QueryEngine;
+use Chumptable\Datatable\Engines\BaseEngine;
 use Chumptable\Datatable\Engines\CollectionEngine;
+use Chumptable\Datatable\Engines\QueryEngine;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Request;
 
 /**
  * Class Datatable
- * @package Chumptable\Datatable
  */
 class Datatable
 {
-
     protected $outputFormat = 'legacy'; // 'legacy'
 
     /**
-     * @param $query
      * @return QueryEngine
      */
     public function query($query)
@@ -27,7 +26,6 @@ class Datatable
     }
 
     /**
-     * @param $collection
      * @return CollectionEngine
      */
     public function collection($collection)
@@ -50,7 +48,7 @@ class Datatable
     {
         $echo = Request::input('sEcho', null);
 
-        if (/* request()->ajax() && */!is_null($echo) && is_numeric($echo)) {
+        if (/* request()->ajax() && */ ! is_null($echo) && is_numeric($echo)) {
             return true;
         }
 
@@ -62,10 +60,11 @@ class Datatable
      */
     public function setOutputFormat($format)
     {
-        if (!in_array($format, ['legacy', 'modern'])) {
+        if (! in_array($format, ['legacy', 'modern'])) {
             throw new \InvalidArgumentException("Invalid format: $format");
         }
         $this->outputFormat = $format;
+
         return $this;
     }
 
@@ -77,11 +76,12 @@ class Datatable
         return $this->outputFormat;
     }
 
-/**
+    /**
      * Create a new datatable instance from a source.
      *
-     * @param mixed $source
-     * @return \Chumptable\Datatable\Engines\BaseEngine
+     * @param  mixed  $source
+     * @return BaseEngine
+     *
      * @throws \InvalidArgumentException
      */
     public static function of($source)

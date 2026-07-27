@@ -2,6 +2,7 @@
 
 namespace Chumptable\Datatable\Facades;
 
+use Chumptable\Datatable\Datatable;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Chumptable\Datatable\Table table()
  * @method static bool shouldHandle()
  *
- * @see \Chumptable\Datatable\Datatable
+ * @see Datatable
  */
 class DatatableFacade extends Facade
 {

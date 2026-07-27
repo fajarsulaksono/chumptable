@@ -6,27 +6,15 @@ use Illuminate\Support\ServiceProvider;
 
 class DatatableServiceProvider extends ServiceProvider
 {
-    /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
-
-    /**
-     * Bootstrap the application services.
-     *
-     * @return void
-     */
     public function boot()
     {
         // Publish config
         $this->publishes([
-            __DIR__ . '/config/chumptable.php' => config_path('chumptable.php'),
+            __DIR__.'/config/chumptable.php' => config_path('chumptable.php'),
         ], 'config');
 
         // Load views
-        $this->loadViewsFrom(__DIR__ . '/resources/views', 'chumptable');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'chumptable');
     }
 
     /**

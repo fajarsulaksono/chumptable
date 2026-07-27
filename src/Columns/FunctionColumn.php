@@ -20,9 +20,6 @@ class FunctionColumn extends BaseColumn
 
     /**
      * FunctionColumn constructor.
-     *
-     * @param string   $name
-     * @param callable $callable
      */
     public function __construct(string $name, callable $callable)
     {
@@ -33,7 +30,7 @@ class FunctionColumn extends BaseColumn
     /**
      * Run the column transformation.
      *
-     * @param mixed $model
+     * @param  mixed  $model
      * @return mixed
      */
     public function run($model)

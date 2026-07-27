@@ -3,14 +3,15 @@
 namespace Chumptable\Datatable\Tests\Engines;
 
 use Chumptable\Datatable\Engines\CollectionEngine;
-use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Support\Collection;
 use Mockery as m;
+use PHPUnit\Framework\TestCase;
 
 class CollectionEngineTest extends TestCase
 {
     protected $config;
+
     protected $request;
 
     protected function setUp(): void
@@ -44,8 +45,8 @@ class CollectionEngineTest extends TestCase
     {
         $collection = new Collection($data);
 
-        return new class($collection, $this->config) extends CollectionEngine {
-
+        return new class($collection, $this->config) extends CollectionEngine
+        {
             protected $workingData;
 
             public function __construct($collection, $config)
@@ -90,10 +91,12 @@ class CollectionEngineTest extends TestCase
                             return true;
                         }
                     }
+
                     return false;
                 });
 
                 $this->setCollectionData(array_values($filtered));
+
                 return $this;
             }
 
@@ -101,7 +104,7 @@ class CollectionEngineTest extends TestCase
             protected function order($columns, $direction = 'asc')
             {
                 // Handle jika dipanggil dengan format lama (array of orders)
-                if (is_array($columns) && !is_string($columns)) {
+                if (is_array($columns) && ! is_string($columns)) {
                     // Format: [['column' => 'id', 'direction' => 'asc']]
                     $orders = $columns;
 
@@ -118,11 +121,12 @@ class CollectionEngineTest extends TestCase
 
                         // Sort by column
                         usort($data, function ($a, $b) use ($column, $dir) {
-                            if (!isset($a[$column]) || !isset($b[$column])) {
+                            if (! isset($a[$column]) || ! isset($b[$column])) {
                                 return 0;
                             }
 
                             $result = $a[$column] <=> $b[$column];
+
                             return $dir === SORT_DESC ? -$result : $result;
                         });
 
@@ -138,11 +142,12 @@ class CollectionEngineTest extends TestCase
 
                     // Sort by column
                     usort($data, function ($a, $b) use ($column, $dir) {
-                        if (!isset($a[$column]) || !isset($b[$column])) {
+                        if (! isset($a[$column]) || ! isset($b[$column])) {
                             return 0;
                         }
 
                         $result = $a[$column] <=> $b[$column];
+
                         return $dir === SORT_DESC ? -$result : $result;
                     });
 
@@ -152,11 +157,11 @@ class CollectionEngineTest extends TestCase
                 return $this;
             }
 
-
             protected function skip($count)
             {
                 $data = $this->getCollectionData();
                 $this->setCollectionData(array_slice($data, $count));
+
                 return $this;
             }
 
@@ -164,6 +169,7 @@ class CollectionEngineTest extends TestCase
             {
                 $data = $this->getCollectionData();
                 $this->setCollectionData(array_slice($data, 0, $count));
+
                 return $this;
             }
 
@@ -186,10 +192,11 @@ class CollectionEngineTest extends TestCase
                     'draw' => 1,
                     'recordsTotal' => count($data),
                     'recordsFiltered' => count($data),
-                    'data' => $data
+                    'data' => $data,
                 ];
 
-                return new class(json_encode($response)) {
+                return new class(json_encode($response))
+                {
                     private $content;
 
                     public function __construct($content)
@@ -212,8 +219,7 @@ class CollectionEngineTest extends TestCase
     }
 
     /** -------------------- TEST CASES -------------------- **/
-
-    public function testSearch()
+    public function test_search()
     {
         $engine = $this->makeEngine([
             ['id' => 1, 'name' => 'Alice'],
@@ -227,7 +233,7 @@ class CollectionEngineTest extends TestCase
         $this->assertStringNotContainsString('Alice', $output->getContent());
     }
 
-    public function testOrder()
+    public function test_order()
     {
         $engine = $this->makeEngine([
             ['id' => 1, 'name' => 'Alice'],
@@ -242,7 +248,7 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals(1, $data[1]['id']);
     }
 
-    public function testSkip()
+    public function test_skip()
     {
         $engine = $this->makeEngine([
             ['id' => 1],
@@ -258,7 +264,7 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals(2, $data[0]['id']);
     }
 
-    public function testTake()
+    public function test_take()
     {
         $engine = $this->makeEngine([
             ['id' => 1],
@@ -275,7 +281,7 @@ class CollectionEngineTest extends TestCase
         $this->assertEquals(2, $data[1]['id']);
     }
 
-    public function testComplex()
+    public function test_complex()
     {
         $engine = $this->makeEngine([
             ['id' => 1, 'name' => 'Alice'],

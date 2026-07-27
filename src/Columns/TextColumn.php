@@ -20,9 +20,6 @@ class TextColumn extends BaseColumn
 
     /**
      * TextColumn constructor.
-     *
-     * @param string $name
-     * @param string $text
      */
     public function __construct(string $name, string $text)
     {
@@ -33,8 +30,7 @@ class TextColumn extends BaseColumn
     /**
      * Run the column transformation.
      *
-     * @param mixed $model
-     * @return string
+     * @param  mixed  $model
      */
     public function run($model): string
     {

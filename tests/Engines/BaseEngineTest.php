@@ -4,10 +4,10 @@ namespace Chumptable\Datatable\Tests\Engines;
 
 use Chumptable\Datatable\Engines\BaseEngine;
 use Chumptable\Datatable\Engines\CollectionEngine;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Mockery;
 use PHPUnit\Framework\TestCase;
 
@@ -30,10 +30,12 @@ class DummyEngine extends BaseEngine
     {
         return 2;
     }
+
     protected function count()
     {
         return 2;
     }
+
     protected function internalMake(Collection $columns, array $searchColumns = [])
     {
         return collect([
@@ -46,6 +48,7 @@ class DummyEngine extends BaseEngine
 class BaseEngineTest extends TestCase
 {
     protected $config;
+
     protected $mockRequest;
 
     /** @var DummyEngine */
@@ -77,7 +80,7 @@ class BaseEngineTest extends TestCase
 
         Container::getInstance()->instance('request', $this->mockRequest);
 
-        $this->engine = new DummyEngine();
+        $this->engine = new DummyEngine;
         $this->engine->showColumns(['name', 'age']);
     }
 
@@ -117,7 +120,7 @@ class BaseEngineTest extends TestCase
                 'length' => 10,
                 'search' => ['value' => '', 'regex' => false],
                 'order' => [],
-                'columns' => []
+                'columns' => [],
             ])
             ->byDefault();
 
@@ -259,8 +262,10 @@ class BaseEngineTest extends TestCase
         $collection = new Collection($data);
 
         // subclass anon supaya bisa akses method protected
-        return new class($collection, $this->config) extends CollectionEngine {
+        return new class($collection, $this->config) extends CollectionEngine
+        {
             protected $testCollection;
+
             protected $showOnlyColumns = [];
 
             public function __construct($collection, $config)
@@ -293,6 +298,7 @@ class BaseEngineTest extends TestCase
             public function showColumns($cols)
             {
                 $this->showOnlyColumns = $cols;
+
                 return $this;
             }
 
@@ -308,6 +314,7 @@ class BaseEngineTest extends TestCase
                 } catch (\Exception $e) {
                     // Fallback jika reflection gagal
                 }
+
                 return $this;
             }
 
@@ -315,7 +322,7 @@ class BaseEngineTest extends TestCase
             protected function order($columns, $direction = 'asc')
             {
                 // Handle jika dipanggil dengan format lama (array of orders)
-                if (is_array($columns) && !is_string($columns)) {
+                if (is_array($columns) && ! is_string($columns)) {
                     // Format: [['column' => 'id', 'direction' => 'asc']]
                     $orders = $columns;
 
@@ -332,11 +339,12 @@ class BaseEngineTest extends TestCase
 
                         // Sort by column
                         usort($data, function ($a, $b) use ($column, $dir) {
-                            if (!isset($a[$column]) || !isset($b[$column])) {
+                            if (! isset($a[$column]) || ! isset($b[$column])) {
                                 return 0;
                             }
 
                             $result = $a[$column] <=> $b[$column];
+
                             return $dir === SORT_DESC ? -$result : $result;
                         });
 
@@ -352,11 +360,12 @@ class BaseEngineTest extends TestCase
 
                     // Sort by column
                     usort($data, function ($a, $b) use ($column, $dir) {
-                        if (!isset($a[$column]) || !isset($b[$column])) {
+                        if (! isset($a[$column]) || ! isset($b[$column])) {
                             return 0;
                         }
 
                         $result = $a[$column] <=> $b[$column];
+
                         return $dir === SORT_DESC ? -$result : $result;
                     });
 
@@ -380,6 +389,7 @@ class BaseEngineTest extends TestCase
                     $collectionProperty = $reflection->getParentClass()->getProperty('collection');
                     $collectionProperty->setAccessible(true);
                     $collection = $collectionProperty->getValue($this);
+
                     return $collection->toArray();
                 } catch (\Exception $e) {
                     return [];
@@ -389,14 +399,14 @@ class BaseEngineTest extends TestCase
             protected function setCollectionData($data)
             {
                 // Update testCollection
-                $this->testCollection = new \Illuminate\Support\Collection($data);
+                $this->testCollection = new Collection($data);
 
                 // Coba update parent collection via reflection
                 try {
                     $reflection = new \ReflectionClass($this);
                     $collectionProperty = $reflection->getParentClass()->getProperty('collection');
                     $collectionProperty->setAccessible(true);
-                    $collectionProperty->setValue($this, new \Illuminate\Support\Collection($data));
+                    $collectionProperty->setValue($this, new Collection($data));
                 } catch (\Exception $e) {
                     // Ignore jika gagal
                 }
@@ -410,7 +420,7 @@ class BaseEngineTest extends TestCase
                     $data = $this->getCollectionData();
 
                     // Apply showColumns filter jika ada
-                    if (!empty($this->showOnlyColumns)) {
+                    if (! empty($this->showOnlyColumns)) {
                         $data = array_map(function ($row) {
                             return array_intersect_key($row, array_flip($this->showOnlyColumns));
                         }, $data);
@@ -420,11 +430,12 @@ class BaseEngineTest extends TestCase
                         'draw' => 1,
                         'recordsTotal' => count($data),
                         'recordsFiltered' => count($data),
-                        'data' => $data
+                        'data' => $data,
                     ];
 
                     // Mock response object yang simple
-                    return new class(json_encode($response)) {
+                    return new class(json_encode($response))
+                    {
                         private $content;
 
                         public function __construct($content)
@@ -448,10 +459,11 @@ class BaseEngineTest extends TestCase
                         'draw' => 1,
                         'recordsTotal' => 0,
                         'recordsFiltered' => 0,
-                        'data' => []
+                        'data' => [],
                     ];
 
-                    return new class(json_encode($fallbackResponse)) {
+                    return new class(json_encode($fallbackResponse))
+                    {
                         private $content;
 
                         public function __construct($content)
@@ -485,29 +497,34 @@ class BaseEngineTest extends TestCase
                     }
 
                     // Jika columns adalah Collection Laravel
-                    if ($this->columns instanceof \Illuminate\Support\Collection) {
+                    if ($this->columns instanceof Collection) {
                         if (method_exists($this->columns, 'keys')) {
                             $keys = $this->columns->keys();
+
                             return is_array($keys) ? $keys : $keys->toArray();
                         }
+
                         return array_keys($this->columns->toArray());
                     }
 
                     // Jika columns adalah ArrayAccess dengan method keys
                     if ($this->columns instanceof \ArrayAccess && method_exists($this->columns, 'keys')) {
                         $keys = $this->columns->keys();
+
                         return is_array($keys) ? $keys : (method_exists($keys, 'toArray') ? $keys->toArray() : []);
                     }
 
                     // Jika columns punya method toArray
                     if (is_object($this->columns) && method_exists($this->columns, 'toArray')) {
                         $array = $this->columns->toArray();
+
                         return is_array($array) ? array_keys($array) : [];
                     }
 
                     // Jika columns punya method getArrayCopy (untuk ArrayObject)
                     if (is_object($this->columns) && method_exists($this->columns, 'getArrayCopy')) {
                         $array = $this->columns->getArrayCopy();
+
                         return is_array($array) ? array_keys($array) : [];
                     }
 
@@ -523,7 +540,8 @@ class BaseEngineTest extends TestCase
                     return [];
                 } catch (\Exception $e) {
                     // Jika semua gagal, return array kosong
-                    error_log("Error in getColumnNames: " . $e->getMessage());
+                    error_log('Error in getColumnNames: '.$e->getMessage());
+
                     return [];
                 }
             }
@@ -546,7 +564,7 @@ class BaseEngineTest extends TestCase
         };
     }
 
-    public function testAddColumn()
+    public function test_add_column()
     {
         $engine = $this->makeEngine([['id' => 1, 'name' => 'John']]);
 
@@ -560,19 +578,19 @@ class BaseEngineTest extends TestCase
         });
 
         $columnNames = $engine->getColumnNames();
-        $this->assertTrue(in_array('extra', $columnNames), 'Column "extra" should be in: ' . implode(', ', $columnNames));
+        $this->assertTrue(in_array('extra', $columnNames), 'Column "extra" should be in: '.implode(', ', $columnNames));
     }
 
-    public function testClearColumns()
+    public function test_clear_columns()
     {
         $engine = $this->makeEngine([['id' => 1]]);
-        $engine->addColumn('foo', fn() => 'bar');
+        $engine->addColumn('foo', fn () => 'bar');
         $engine->callClearColumns();
 
         $this->assertEmpty($engine->getColumnNames());
     }
 
-    public function testSearchColumns()
+    public function test_search_columns()
     {
         $engine = $this->makeEngine([
             ['id' => 1, 'name' => 'John'],
@@ -585,7 +603,7 @@ class BaseEngineTest extends TestCase
         $this->assertStringContainsString('Jane', $output->getContent());
     }
 
-    public function testOrderColumns()
+    public function test_order_columns()
     {
         $engine = $this->makeEngine([
             ['id' => 2, 'name' => 'B'],
@@ -595,10 +613,10 @@ class BaseEngineTest extends TestCase
         $engine->callOrder([['column' => 'id', 'direction' => 'asc']]);
         $output = $engine->make();
 
-        $this->assertRegExp('/"id":1.*"id":2/s', $output->getContent());
+        $this->assertMatchesRegularExpression('/"id":1.*"id":2/s', $output->getContent());
     }
 
-    public function testShowColumns()
+    public function test_show_columns()
     {
         $engine = $this->makeEngine([
             ['id' => 1, 'name' => 'John', 'email' => 'a@b.com'],
@@ -624,9 +642,9 @@ class BaseEngineTest extends TestCase
         $this->assertStringContainsString('"name":"John"', $content);
     }
 
-    public function testLegacyOutput()
+    public function test_legacy_output()
     {
-        $engine = new DummyEngine();
+        $engine = new DummyEngine;
 
         $json = $engine->toArray(); // pakai wrapper
 
@@ -636,9 +654,9 @@ class BaseEngineTest extends TestCase
     }
 
     /** @test */
-    public function testModernOutput()
+    public function test_modern_output()
     {
-        $engine = new DummyEngine();
+        $engine = new DummyEngine;
         $engine->setOutputFormat('modern');
 
         $json = $engine->toArray();

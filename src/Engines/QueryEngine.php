@@ -35,15 +35,15 @@ class QueryEngine extends BaseEngine
      * @var array
      */
     private $options = [
-        'searchOperator'     => 'LIKE',
-        'searchWithAlias'    => false,
-        'orderOrder'         => null,
-        'counter'            => 0,
-        'noGroupByOnCount'   => false,
+        'searchOperator' => 'LIKE',
+        'searchWithAlias' => false,
+        'orderOrder' => null,
+        'counter' => 0,
+        'noGroupByOnCount' => false,
         'distinctCountGroup' => false,
-        'emptyAtEnd'         => false,
-        'returnQuery'        => false,
-        'queryKeepsLimits'   => false,
+        'emptyAtEnd' => false,
+        'returnQuery' => false,
+        'queryKeepsLimits' => false,
     ];
 
     public function __construct($builder)
@@ -51,10 +51,10 @@ class QueryEngine extends BaseEngine
         parent::__construct();
 
         if ($builder instanceof Relation) {
-            $this->builder         = $builder->getBaseQuery();
+            $this->builder = $builder->getBaseQuery();
             $this->originalBuilder = clone $builder->getBaseQuery();
         } else {
-            $this->builder         = $builder;
+            $this->builder = $builder;
             $this->originalBuilder = clone $builder;
         }
     }
@@ -91,51 +91,58 @@ class QueryEngine extends BaseEngine
     public function reset(): self
     {
         $this->builder = clone $this->originalBuilder;
+
         return $this;
     }
 
     // ---------------- Options ----------------
 
-    public function setSearchOperator(string $value = "LIKE"): self
+    public function setSearchOperator(string $value = 'LIKE'): self
     {
         $this->options['searchOperator'] = $value;
+
         return $this;
     }
 
     public function setSearchWithAlias(bool $value = true): self
     {
         $this->options['searchWithAlias'] = $value;
+
         return $this;
     }
 
     public function setEmptyAtEnd(bool $value = true): self
     {
         $this->options['emptyAtEnd'] = $value;
+
         return $this;
     }
 
     public function setNoGroupByOnCount(bool $value = true): self
     {
         $this->options['noGroupByOnCount'] = $value;
+
         return $this;
     }
 
     public function setDistinctCountGroup(bool $value = true): self
     {
         $this->options['distinctCountGroup'] = $value;
+
         return $this;
     }
 
     public function setReturnQuery(bool $value = true): self
     {
         $this->options['returnQuery'] = $value;
+
         return $this;
     }
 
     public function setOptions(array $options = []): self
     {
         foreach ($options as $key => $val) {
-            if (!array_key_exists($key, $this->options)) {
+            if (! array_key_exists($key, $this->options)) {
                 throw new Exception("The option $key is not valid.");
             }
             if (is_bool($this->options[$key])) {
@@ -143,12 +150,14 @@ class QueryEngine extends BaseEngine
             }
             $this->options[$key] = $val;
         }
+
         return $this;
     }
 
     public function setQueryKeepsLimits(bool $value = true): self
     {
         $this->options['queryKeepsLimits'] = $value;
+
         return $this;
     }
 
@@ -156,6 +165,7 @@ class QueryEngine extends BaseEngine
     {
         $this->prepareEngine();
         $this->setReturnQuery();
+
         return $this->internalMake($this->columns, $this->searchColumns);
     }
 
@@ -163,10 +173,10 @@ class QueryEngine extends BaseEngine
 
     protected function internalMake(Collection $columns, array $searchColumns = [])
     {
-        $builder      = clone $this->builder;
+        $builder = clone $this->builder;
         $countBuilder = clone $this->builder;
 
-        $builder      = $this->doInternalSearch($builder, $searchColumns);
+        $builder = $this->doInternalSearch($builder, $searchColumns);
         $countBuilder = $this->doInternalSearch($countBuilder, $searchColumns);
 
         // Count
@@ -208,6 +218,7 @@ class QueryEngine extends BaseEngine
                 $builder = $builder->take($this->limit);
             }
         }
+
         return $builder;
     }
 
@@ -227,11 +238,11 @@ class QueryEngine extends BaseEngine
 
     private function doInternalSearch($builder, array $columns)
     {
-        if (!empty($this->search)) {
+        if (! empty($this->search)) {
             $builder = $this->buildSearchQuery($builder, $columns);
         }
 
-        if (!empty($this->columnSearches)) {
+        if (! empty($this->columnSearches)) {
             $builder = $this->buildSingleColumnSearches($builder);
         }
 
@@ -240,9 +251,9 @@ class QueryEngine extends BaseEngine
 
     private function buildSearchQuery($builder, array $columns)
     {
-        $like   = $this->options['searchOperator'];
+        $like = $this->options['searchOperator'];
         $search = $this->search;
-        $exact  = $this->exactWordSearch;
+        $exact = $this->exactWordSearch;
 
         $builder->where(function ($query) use ($columns, $search, $like, $exact) {
             foreach ($columns as $c) {
@@ -265,7 +276,9 @@ class QueryEngine extends BaseEngine
     {
         foreach ($this->columnSearches as $index => $searchValue) {
             $field = $this->fieldSearches[$index] ?? null;
-            if (!$field) continue;
+            if (! $field) {
+                continue;
+            }
 
             if (isset($this->columnSearchExact[$field]) && $this->columnSearchExact[$field]) {
                 $builder->where($field, '=', $searchValue);
@@ -273,6 +286,7 @@ class QueryEngine extends BaseEngine
                 $builder->where($field, $this->options['searchOperator'], "%$searchValue%");
             }
         }
+
         return $builder;
     }
 
@@ -281,6 +295,7 @@ class QueryEngine extends BaseEngine
         $this->resultCollection = $this->getCollection($builder);
 
         $self = $this;
+
         return $this->resultCollection->map(function ($row) use ($columns, $self) {
             $entry = [];
 
@@ -311,7 +326,7 @@ class QueryEngine extends BaseEngine
 
     private function doInternalOrder($builder, Collection $columns)
     {
-        if (!is_null($this->orderColumn)) {
+        if (! is_null($this->orderColumn)) {
             foreach ($this->orderColumn as $ordCol) {
                 if (strrpos($ordCol[1], ':')) {
                     $c = explode(':', $ordCol[1]);
@@ -319,13 +334,14 @@ class QueryEngine extends BaseEngine
                         $c[1] .= "({$c[2]})";
                     }
                     $prefix = $this->options['emptyAtEnd'] ? "ISNULL({$c[0]}) asc," : '';
-                    $builder->orderByRaw($prefix . " CAST($c[0] AS $c[1]) " . $this->orderDirection[$ordCol[0]]);
+                    $builder->orderByRaw($prefix." CAST($c[0] AS $c[1]) ".$this->orderDirection[$ordCol[0]]);
                 } else {
                     $prefix = $this->options['emptyAtEnd'] ? "ISNULL({$ordCol[1]}) asc," : '';
-                    $builder->orderByRaw($prefix . $ordCol[1] . ' ' . $this->orderDirection[$ordCol[0]]);
+                    $builder->orderByRaw($prefix.$ordCol[1].' '.$this->orderDirection[$ordCol[0]]);
                 }
             }
         }
+
         return $builder;
     }
 

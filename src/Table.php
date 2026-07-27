@@ -10,24 +10,35 @@ use InvalidArgumentException;
 
 /**
  * Class Table
- * @package Chumptable\Datatable
  */
 class Table
 {
     private array $config = [];
+
     private array $columns = [];
+
     private array $options = [];
+
     private array $callbacks = [];
+
     private array $customValues = [];
+
     private array $data = [];
 
     private bool $noScript = false;
+
     protected string $idName;
+
     protected string $className;
+
     protected string $footerMode = 'hidden';
+
     protected string $table_view;
+
     protected string $script_view;
+
     private bool $createdMapping = true;
+
     private array $aliasColumns = [];
 
     public function __construct()
@@ -39,8 +50,8 @@ class Table
         $this->setOptions($this->config['options'] ?? []);
         $this->setCallbacks($this->config['callbacks'] ?? []);
 
-        $this->noScript    = $this->config['noScript'] ?? false;
-        $this->table_view  = $this->config['table_view'] ?? 'datatable::table';
+        $this->noScript = $this->config['noScript'] ?? false;
+        $this->table_view = $this->config['table_view'] ?? 'datatable::table';
         $this->script_view = $this->config['script_view'] ?? 'datatable::script';
     }
 
@@ -49,17 +60,18 @@ class Table
         foreach ($titles as $title) {
             if (is_array($title)) {
                 foreach ($title as $mapping => $arrayTitle) {
-                    $this->columns[]      = $arrayTitle;
+                    $this->columns[] = $arrayTitle;
                     $this->aliasColumns[] = $mapping;
                     if (is_string($mapping)) {
                         $this->createdMapping = false;
                     }
                 }
             } else {
-                $this->columns[]      = $title;
+                $this->columns[] = $title;
                 $this->aliasColumns[] = count($this->aliasColumns) + 1;
             }
         }
+
         return $this;
     }
 
@@ -71,6 +83,7 @@ class Table
     public function removeOption(string $key): self
     {
         unset($this->options[$key]);
+
         return $this;
     }
 
@@ -88,6 +101,7 @@ class Table
         } else {
             throw new InvalidArgumentException('Invalid number of options provided for "setOptions".');
         }
+
         return $this;
     }
 
@@ -98,7 +112,8 @@ class Table
             $orders[] = "[ {$number}, \"{$sort}\" ]";
         }
 
-        $this->callbacks['aaSorting'] = '[' . implode(', ', $orders) . ']';
+        $this->callbacks['aaSorting'] = '['.implode(', ', $orders).']';
+
         return $this;
     }
 
@@ -141,6 +156,7 @@ class Table
     public function setData(array $data): self
     {
         $this->data = $data;
+
         return $this;
     }
 
@@ -148,6 +164,7 @@ class Table
     {
         $this->options['sAjaxSource'] = $url;
         $this->options['bServerSide'] = true;
+
         return $this;
     }
 
@@ -177,23 +194,23 @@ class Table
             $this->table_view = $view;
         }
 
-        if (!isset($this->options['sAjaxSource']) && !isset($this->options['ajax'])) {
+        if (! isset($this->options['sAjaxSource']) && ! isset($this->options['ajax'])) {
             $this->setUrl(Request::url());
         }
 
-        if (!$this->createdMapping) {
+        if (! $this->createdMapping) {
             $this->createMapping();
         }
 
         $vars = [
-            'options'    => $this->options,
-            'callbacks'  => $this->callbacks,
-            'values'     => $this->customValues,
-            'data'       => $this->data,
-            'columns'    => array_combine($this->aliasColumns, $this->columns),
-            'noScript'   => $this->noScript,
-            'id'         => $this->idName,
-            'class'      => $this->className,
+            'options' => $this->options,
+            'callbacks' => $this->callbacks,
+            'values' => $this->customValues,
+            'data' => $this->data,
+            'columns' => array_combine($this->aliasColumns, $this->columns),
+            'noScript' => $this->noScript,
+            'id' => $this->idName,
+            'class' => $this->className,
             'footerMode' => $this->footerMode,
         ];
 
@@ -203,6 +220,7 @@ class Table
     public function noScript(): self
     {
         $this->noScript = true;
+
         return $this;
     }
 
@@ -212,14 +230,14 @@ class Table
             $this->script_view = $view;
         }
 
-        if (!$this->createdMapping) {
+        if (! $this->createdMapping) {
             $this->createMapping();
         }
 
         return View::make($this->script_view, [
-            'options'   => $this->options,
+            'options' => $this->options,
             'callbacks' => $this->callbacks,
-            'id'        => $this->idName,
+            'id' => $this->idName,
         ])->render();
     }
 
@@ -231,6 +249,7 @@ class Table
     public function setId(string $id = ''): self
     {
         $this->idName = $id ?: Str::random(8);
+
         return $this;
     }
 
@@ -242,24 +261,27 @@ class Table
     public function setClass(string $class): self
     {
         $this->className = $class;
+
         return $this;
     }
 
     public function showFooter(string $value = 'columns'): self
     {
         $this->footerMode = $value;
+
         return $this;
     }
 
     public function setAliasMapping(bool $value = true): self
     {
-        $this->createdMapping = !$value;
+        $this->createdMapping = ! $value;
+
         return $this;
     }
 
     private function createMapping(): void
     {
-        if (!array_key_exists('aoColumns', $this->options)) {
+        if (! array_key_exists('aoColumns', $this->options)) {
             $this->options['aoColumns'] = [];
         }
 

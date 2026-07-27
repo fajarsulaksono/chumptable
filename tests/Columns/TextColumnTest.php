@@ -7,7 +7,7 @@ use Orchestra\Testbench\TestCase;
 
 class TextColumnTest extends TestCase
 {
-    public function testWorking()
+    public function test_working()
     {
         $column = new TextColumn('foo', 'FooBar');
 

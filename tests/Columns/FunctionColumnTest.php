@@ -4,18 +4,19 @@ namespace Tests\Columns;
 
 use Chumptable\Datatable\Columns\FunctionColumn;
 use Orchestra\Testbench\TestCase;
+
 class FunctionColumnTest extends TestCase
 {
-    public function testSimple()
+    public function test_simple()
     {
         $column = new FunctionColumn('foo', function ($model) {
-            return "FooBar";
+            return 'FooBar';
         });
 
         $this->assertEquals('FooBar', $column->run([]));
     }
 
-    public function testAdvanced()
+    public function test_advanced()
     {
         $column = new FunctionColumn('foo', function ($model) {
             return $model['text'];
@@ -24,10 +25,10 @@ class FunctionColumnTest extends TestCase
         $this->assertEquals('FooBar', $column->run(['text' => 'FooBar']));
     }
 
-    public function testAdvanced2()
+    public function test_advanced2()
     {
         $column = new FunctionColumn('foo', function ($model) {
-            return $model['text'] . 'Bar';
+            return $model['text'].'Bar';
         });
 
         $this->assertEquals('FooBar', $column->run(['text' => 'Foo']));

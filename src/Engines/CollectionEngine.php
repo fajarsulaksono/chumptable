@@ -11,17 +11,16 @@ use Illuminate\Support\Str;
  * do all the operations
  *
  * Class CollectionEngine
- * @package Chumptable\Datatable\Engines
  */
-class CollectionEngine extends BaseEngine {
-
+class CollectionEngine extends BaseEngine
+{
     /**
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     private $workingCollection;
 
     /**
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     private $collection;
 
@@ -38,16 +37,13 @@ class CollectionEngine extends BaseEngine {
     /**
      * @var array Different options
      */
-    private $options = array(
-        'stripOrder'        =>  false,
-        'stripSearch'       =>  false,
-        'caseSensitive'     =>  false,
-    );
+    private $options = [
+        'stripOrder' => false,
+        'stripSearch' => false,
+        'caseSensitive' => false,
+    ];
 
-    /**
-     * @param Collection $collection
-     */
-    function __construct(Collection $collection)
+    public function __construct(Collection $collection)
     {
         parent::__construct();
         $this->collection = $collection;
@@ -77,11 +73,11 @@ class CollectionEngine extends BaseEngine {
     {
         $this->handleInputs();
         $this->compileArray($this->columns);
-        $this->doInternalSearch(new Collection(), array());
+        $this->doInternalSearch(new Collection, []);
         $this->doInternalOrder();
 
         return array_values($this->workingCollection
-            ->slice($this->skip,$this->limit)
+            ->slice($this->skip, $this->limit)
             ->toArray()
         );
     }
@@ -92,36 +88,42 @@ class CollectionEngine extends BaseEngine {
     public function reset()
     {
         $this->workingCollection = $this->collection;
+
         return $this;
     }
 
     public function stripSearch()
     {
         $this->options['stripSearch'] = true;
+
         return $this;
     }
 
     public function stripOrder()
     {
         $this->options['stripOrder'] = true;
+
         return $this;
     }
 
     public function setSearchStrip()
     {
         $this->options['stripSearch'] = true;
+
         return $this;
     }
 
     public function setOrderStrip()
     {
         $this->options['stripOrder'] = true;
+
         return $this;
     }
 
     public function setCaseSensitive($value)
     {
         $this->options['caseSensitive'] = $value;
+
         return $this;
     }
 
@@ -129,44 +131,41 @@ class CollectionEngine extends BaseEngine {
     {
         return $this->options[$value];
     }
-    //--------------PRIVATE FUNCTIONS-----------------
+    // --------------PRIVATE FUNCTIONS-----------------
 
-    protected function internalMake(Collection $columns, array $searchColumns = array())
+    protected function internalMake(Collection $columns, array $searchColumns = [])
     {
         $this->compileArray($columns);
         $this->doInternalSearch($columns, $searchColumns);
         $this->doInternalOrder();
 
-        return $this->workingCollection->slice($this->skip,$this->limit)->values();
+        return $this->workingCollection->slice($this->skip, $this->limit)->values();
     }
 
     private function doInternalSearch(Collection $columns, array $searchColumns)
     {
-        if((is_null($this->search) || empty($this->search)) && empty($this->fieldSearches))
+        if ((is_null($this->search) || empty($this->search)) && empty($this->fieldSearches)) {
             return;
+        }
 
         $value = $this->search;
         $caseSensitive = $this->options['caseSensitive'];
 
-        $toSearch = array();
+        $toSearch = [];
 
         $searchType = self::AND_CONDITION;
 
         // Map the searchColumns to the real columns
         $ii = 0;
-        foreach($columns as $i => $col)
-        {
-            if(in_array($columns->get($i)->getName(), $searchColumns) || in_array($columns->get($i)->getName(), $this->fieldSearches))
-            {
+        foreach ($columns as $i => $col) {
+            if (in_array($columns->get($i)->getName(), $searchColumns) || in_array($columns->get($i)->getName(), $this->fieldSearches)) {
                 // map values to columns, where there is no value use the global value
-                if(($field = array_search($columns->get($i)->getName(), $this->fieldSearches)) !== FALSE)
-                {
+                if (($field = array_search($columns->get($i)->getName(), $this->fieldSearches)) !== false) {
                     $toSearch[$ii] = $this->columnSearches[$field];
-                }
-                else
-                {
-                    if($value)
+                } else {
+                    if ($value) {
                         $searchType = self::OR_CONDITION;
+                    }
 
                     $toSearch[$ii] = $value;
                 }
@@ -175,30 +174,24 @@ class CollectionEngine extends BaseEngine {
         }
 
         $self = $this;
-        $this->workingCollection = $this->workingCollection->filter(function($row) use ($toSearch, $caseSensitive, $self, $searchType)
-        {
+        $this->workingCollection = $this->workingCollection->filter(function ($row) use ($toSearch, $caseSensitive, $self, $searchType) {
 
-            for($i=0, $stack=array(), $nb=count($row); $i<$nb; $i++)
-            {
-                if(!array_key_exists($i, $toSearch))
+            for ($i = 0, $stack = [], $nb = count($row); $i < $nb; $i++) {
+                if (! array_key_exists($i, $toSearch)) {
                     continue;
+                }
 
                 $column = $i;
-                if($self->getAliasMapping())
-                {
+                if ($self->getAliasMapping()) {
                     $column = $self->getNameByIndex($i);
                 }
 
-                if($self->getOption('stripSearch'))
-                {
+                if ($self->getOption('stripSearch')) {
                     $search = strip_tags($row[$column]);
-                }
-                else
-                {
+                } else {
                     $search = $row[$column];
                 }
-                if($caseSensitive)
-                {
+                if ($caseSensitive) {
                     if ($self->exactWordSearch) {
                         if ($toSearch[$i] === $search) {
                             $stack[$i] = true;
@@ -208,33 +201,29 @@ class CollectionEngine extends BaseEngine {
                             $stack[$i] = true;
                         }
                     }
-                }
-                else
-                {
-                    if($self->getExactWordSearch())
-                    {
-                        if(mb_strtolower($toSearch[$i]) === mb_strtolower($search))
+                } else {
+                    if ($self->getExactWordSearch()) {
+                        if (mb_strtolower($toSearch[$i]) === mb_strtolower($search)) {
                             $stack[$i] = true;
-                    }
-                    else
-                    {
-                        if(str_contains(mb_strtolower($search),mb_strtolower($toSearch[$i])))
+                        }
+                    } else {
+                        if (str_contains(mb_strtolower($search), mb_strtolower($toSearch[$i]))) {
                             $stack[$i] = true;
+                        }
                     }
                 }
             }
 
-            if($searchType == $self::AND_CONDITION)
-            {
+            if ($searchType == $self::AND_CONDITION) {
                 $result = array_diff_key(array_filter($toSearch), $stack);
 
-                if(empty($result))
+                if (empty($result)) {
                     return true;
-            }
-            else
-            {
-                if(!empty($stack))
+                }
+            } else {
+                if (! empty($stack)) {
                     return true;
+                }
             }
         });
     }
@@ -258,6 +247,7 @@ class CollectionEngine extends BaseEngine {
 
             if ($this->getAliasMapping()) {
                 $column = $this->getNameByIndex($column[0]);
+
                 return $row[$column];
             }
 
@@ -267,6 +257,7 @@ class CollectionEngine extends BaseEngine {
                 if (is_array($column)) {
                     return $row[$column[0]];
                 }
+
                 return $row[$column];
             }
         });
@@ -275,32 +266,27 @@ class CollectionEngine extends BaseEngine {
     private function compileArray($columns)
     {
         $self = $this;
-        $this->workingCollection = $this->collection->map(function($row) use ($columns, $self) {
-            $entry = array();
+        $this->workingCollection = $this->collection->map(function ($row) use ($columns, $self) {
+            $entry = [];
 
             // add class and id if needed
-            if(!is_null($self->getRowClass()) && is_callable($self->getRowClass()))
-            {
-                $entry['DT_RowClass'] = call_user_func($self->getRowClass(),$row);
+            if (! is_null($self->getRowClass()) && is_callable($self->getRowClass())) {
+                $entry['DT_RowClass'] = call_user_func($self->getRowClass(), $row);
             }
-            if(!is_null($self->getRowId()) && is_callable($self->getRowId()))
-            {
-                $entry['DT_RowId'] = call_user_func($self->getRowId(),$row);
+            if (! is_null($self->getRowId()) && is_callable($self->getRowId())) {
+                $entry['DT_RowId'] = call_user_func($self->getRowId(), $row);
             }
-            $i=0;
-            foreach ($columns as $col)
-            {
-                if($self->getAliasMapping())
-                {
-                    $entry[$col->getName()] =  $col->run($row);
-                }
-                else
-                {
-                    $entry[$i] =  $col->run($row);
+            $i = 0;
+            foreach ($columns as $col) {
+                if ($self->getAliasMapping()) {
+                    $entry[$col->getName()] = $col->run($row);
+                } else {
+                    $entry[$i] = $col->run($row);
                 }
 
                 $i++;
             }
+
             return $entry;
         });
     }

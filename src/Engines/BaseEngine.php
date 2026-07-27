@@ -2,23 +2,24 @@
 
 namespace Chumptable\Datatable\Engines;
 
-use Exception;
 use Chumptable\Datatable\Columns\DateColumn;
 use Chumptable\Datatable\Columns\FunctionColumn;
 use Chumptable\Datatable\Columns\TextColumn;
+use Exception;
 use Illuminate\Support\Collection;
 
 /**
  * Class BaseEngine
- * @package Chumptable\Datatable\Engines
  */
 abstract class BaseEngine
 {
-    const ORDER_ASC  = 'asc';
+    const ORDER_ASC = 'asc';
+
     const ORDER_DESC = 'desc';
 
     /**
      * Output format: 'legacy' (aaData) atau 'modern' (data)
+     *
      * @var string
      */
     protected $outputFormat = 'legacy';
@@ -50,14 +51,14 @@ abstract class BaseEngine
 
     /**
      * @var array
-     * support for DB::raw fields on where
+     *            support for DB::raw fields on where
      */
     protected $fieldSearches = [];
 
     /**
      * @var array
-     * support for DB::raw fields on where
-     * sburkett - added for column-based exact matching
+     *            support for DB::raw fields on where
+     *            sburkett - added for column-based exact matching
      */
     protected $columnSearchExact = [];
 
@@ -67,7 +68,7 @@ abstract class BaseEngine
     protected $sEcho;
 
     /**
-     * @var \Illuminate\Support\Collection
+     * @var Collection
      */
     protected $columns;
 
@@ -134,7 +135,7 @@ abstract class BaseEngine
     public function __construct()
     {
         $this->columns = collect();
-        $this->config  = config('datatable.engine', []);
+        $this->config = config('datatable.engine', []);
 
         $this->setExactWordSearch($this->config['exactWordSearch'] ?? false);
         $this->setEnableDisplayAll($this->config['enableDisplayAll'] ?? false);
@@ -143,21 +144,22 @@ abstract class BaseEngine
     /**
      * Set output format
      *
-     * @param string $format
      * @return $this
      */
     public function setOutputFormat(string $format)
     {
-        if (!in_array($format, ['legacy', 'modern'])) {
+        if (! in_array($format, ['legacy', 'modern'])) {
             throw new \InvalidArgumentException("Invalid output format: $format");
         }
         $this->outputFormat = $format;
+
         return $this;
     }
 
     /**
      * @return $this
-     * @throws \Exception
+     *
+     * @throws Exception
      */
     public function addColumn()
     {
@@ -201,12 +203,13 @@ abstract class BaseEngine
     public function clearColumns()
     {
         $this->columns = collect();
+
         return $this;
     }
 
     public function showColumns($cols)
     {
-        if (!is_array($cols)) {
+        if (! is_array($cols)) {
             $cols = func_get_args();
         }
 
@@ -242,60 +245,67 @@ abstract class BaseEngine
         return response()->json($this->output());
     }
 
-
     public function searchColumns($cols)
     {
-        if (!is_array($cols)) {
+        if (! is_array($cols)) {
             $cols = func_get_args();
         }
 
         $this->searchColumns = $cols;
+
         return $this;
     }
 
     public function orderColumns($cols)
     {
-        if (!is_array($cols)) {
+        if (! is_array($cols)) {
             $cols = func_get_args();
         }
 
         $this->orderColumns = $cols;
+
         return $this;
     }
 
     public function setRowClass($function)
     {
         $this->rowClass = $function;
+
         return $this;
     }
 
     public function setRowId($function)
     {
         $this->rowId = $function;
+
         return $this;
     }
 
     public function setRowData($function)
     {
         $this->rowData = $function;
+
         return $this;
     }
 
     public function setAliasMapping($value = true)
     {
         $this->aliasMapping = $value;
+
         return $this;
     }
 
     public function setExactWordSearch($value = true)
     {
         $this->exactWordSearch = $value;
+
         return $this;
     }
 
     public function setEnableDisplayAll($value = true)
     {
         $this->enableDisplayAll = $value;
+
         return $this;
     }
 
@@ -304,12 +314,14 @@ abstract class BaseEngine
         foreach ($columnNames as $columnIndex) {
             $this->columnSearchExact[$columnIndex] = true;
         }
+
         return $this;
     }
 
     public function setAdditionalData($data)
     {
         $this->additionalData = $data;
+
         return $this;
     }
 
@@ -350,6 +362,7 @@ abstract class BaseEngine
         if (is_numeric($value)) {
             if ($value > -1) {
                 $this->take($value);
+
                 return;
             } elseif ($value == -1 && $this->enableDisplayAll) {
                 return; // Display all
@@ -381,8 +394,9 @@ abstract class BaseEngine
 
         $columns = [];
         if (empty($this->orderColumns)) {
-            $columns[] = [0 => $value, 1 => '`' . $this->getNameByIndex($value) . '`'];
+            $columns[] = [0 => $value, 1 => '`'.$this->getNameByIndex($value).'`'];
             $this->order($columns, $direction);
+
             return;
         }
 
@@ -392,17 +406,17 @@ abstract class BaseEngine
         }
 
         $iSortingCols = request()->input('iSortingCols');
-        $sortingCols  = [$value];
+        $sortingCols = [$value];
         for ($i = 1; $i < $iSortingCols; $i++) {
-            $isc          = request()->input('iSortCol_' . $i);
+            $isc = request()->input('iSortCol_'.$i);
             $sortingCols[] = $isc;
-            $direction[$isc] = request()->input('sSortDir_' . $i);
+            $direction[$isc] = request()->input('sSortDir_'.$i);
         }
 
         $allColumns = array_keys($this->columns->all());
         foreach ($sortingCols as $num) {
             if (isset($allColumns[$num]) && in_array($allColumns[$num], $cleanNames)) {
-                $columns[] = [0 => $num, 1 => '`' . $this->orderColumns[array_search($allColumns[$num], $cleanNames)] . '`'];
+                $columns[] = [0 => $num, 1 => '`'.$this->orderColumns[array_search($allColumns[$num], $cleanNames)].'`'];
             }
         }
 
@@ -411,8 +425,12 @@ abstract class BaseEngine
 
     protected function handleSingleColumnSearch($columnIndex, $searchValue)
     {
-        if (!isset($this->searchColumns[$columnIndex])) return;
-        if ($searchValue === '' && $searchValue !== '0') return;
+        if (! isset($this->searchColumns[$columnIndex])) {
+            return;
+        }
+        if ($searchValue === '' && $searchValue !== '0') {
+            return;
+        }
 
         $columnName = $this->searchColumns[$columnIndex];
         $this->searchOnColumn($columnName, $searchValue);
@@ -424,10 +442,11 @@ abstract class BaseEngine
             if ($this->isParameterForSingleColumnSearch($key)) {
                 $columnIndex = str_replace('sSearch_', '', $key);
                 $this->handleSingleColumnSearch($columnIndex, $input);
+
                 continue;
             }
 
-            if (method_exists($this, $function = 'handle' . $key)) {
+            if (method_exists($this, $function = 'handle'.$key)) {
                 $this->$function($input);
             }
         }
@@ -447,7 +466,7 @@ abstract class BaseEngine
 
     protected function order($column, $order = self::ORDER_ASC)
     {
-        $this->orderColumn    = $column;
+        $this->orderColumn = $column;
         $this->orderDirection = $order;
     }
 
@@ -458,7 +477,7 @@ abstract class BaseEngine
 
     protected function searchOnColumn($columnName, $value)
     {
-        $this->fieldSearches[]  = $columnName;
+        $this->fieldSearches[] = $columnName;
         $this->columnSearches[] = $value;
     }
 
@@ -481,6 +500,7 @@ abstract class BaseEngine
             }
             $i++;
         }
+
         return null;
     }
 
@@ -528,25 +548,27 @@ abstract class BaseEngine
         if ($this->outputFormat === 'modern') {
             // Format modern sesuai DataTables 1.10+
             return [
-                "draw"            => intval($this->sEcho), // alias draw
-                "recordsTotal"    => $total,
-                "recordsFiltered" => $filtered,
-                "data"            => $data,
-                "additional"      => $this->additionalData,
+                'draw' => intval($this->sEcho), // alias draw
+                'recordsTotal' => $total,
+                'recordsFiltered' => $filtered,
+                'data' => $data,
+                'additional' => $this->additionalData,
             ];
         }
 
         // Default = legacy format
         return [
-            "aaData"               => $data,
-            "sEcho"                => intval($this->sEcho),
-            "iTotalRecords"        => $total,
-            "iTotalDisplayRecords" => $filtered,
-            "aaAdditional"         => $this->additionalData,
+            'aaData' => $data,
+            'sEcho' => intval($this->sEcho),
+            'iTotalRecords' => $total,
+            'iTotalDisplayRecords' => $filtered,
+            'aaAdditional' => $this->additionalData,
         ];
     }
 
     abstract protected function totalCount();
+
     abstract protected function count();
+
     abstract protected function internalMake(Collection $columns, array $searchColumns = []);
 }

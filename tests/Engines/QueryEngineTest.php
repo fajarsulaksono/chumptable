@@ -3,15 +3,15 @@
 namespace Tests\Engines;
 
 use Chumptable\Datatable\Columns\FunctionColumn;
-use Chumptable\Datatable\Engines\BaseEngine;
 use Chumptable\Datatable\Engines\QueryEngine;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Input;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
-use Orchestra\Testbench\TestCase;
 use Mockery;
+use Mockery\MockInterface;
+use Orchestra\Testbench\TestCase;
 
 class QueryEngineTest extends TestCase
 {
@@ -21,7 +21,7 @@ class QueryEngineTest extends TestCase
     public $c;
 
     /**
-     * @var \Mockery\MockInterface
+     * @var MockInterface
      */
     public $builder;
 
@@ -45,6 +45,7 @@ class QueryEngineTest extends TestCase
                     'exactWordSearch' => false,
                 ],
             ];
+
             return $configs[$key] ?? $default ?? [];
         });
         $configMock->shouldReceive('offsetGet')->byDefault()->andReturnUsing(function ($key) {
@@ -53,6 +54,7 @@ class QueryEngineTest extends TestCase
                     'exactWordSearch' => false,
                 ],
             ];
+
             return $configs[$key] ?? null;
         });
         $this->app->instance('config', $configMock);
@@ -70,7 +72,7 @@ class QueryEngineTest extends TestCase
         $this->c = new QueryEngine($this->builder);
     }
 
-    public function testOrder()
+    public function test_order()
     {
         $engine = $this->c;
 
@@ -81,49 +83,48 @@ class QueryEngineTest extends TestCase
         // misal $columns adalah array kolom dari engine
         $columns = ['id', 'name', 'email'];
 
-        Input::replace(['iSortCol_0' => 0, 'sSortDir_0' => 'asc']);
+        Request::replace(['iSortCol_0' => 0, 'sSortDir_0' => 'asc']);
         $method->invoke($engine, [$columns]);
 
-        Input::replace(['iSortCol_0' => 1, 'sSortDir_0' => 'desc']);
+        Request::replace(['iSortCol_0' => 1, 'sSortDir_0' => 'desc']);
         $method->invoke($engine, [$columns]);
 
         $this->assertTrue(true); // supaya PHPUnit tidak risky
     }
 
-
-    public function testSearch()
+    public function test_search()
     {
         $this->addRealColumns($this->c);
         $this->c->searchColumns('foo');
 
-        Input::replace([
+        Request::replace([
             'sSearch' => 'test',
         ]);
 
-        $test = json_decode($this->c->make()->getContent());
-        $this->assertIsArray($test->aaData);
+        $test = $this->c->output();
+        $this->assertIsArray($test['aaData']);
     }
 
-    public function testSkip()
+    public function test_skip()
     {
         $this->addRealColumns($this->c);
 
-        Input::replace([
+        Request::replace([
             'iDisplayStart' => 1,
             'sSearch' => null,
         ]);
 
         $this->c->searchColumns('foo');
 
-        $test = json_decode($this->c->make()->getContent());
-        $this->assertIsArray($test->aaData);
+        $test = $this->c->output();
+        $this->assertIsArray($test['aaData']);
     }
 
-    public function testTake()
+    public function test_take()
     {
         $this->addRealColumns($this->c);
 
-        Input::replace([
+        Request::replace([
             'iDisplayLength' => 1,
             'sSearch' => null,
             'iDisplayStart' => null,
@@ -131,11 +132,11 @@ class QueryEngineTest extends TestCase
 
         $this->c->searchColumns('foo');
 
-        $test = json_decode($this->c->make()->getContent());
-        $this->assertIsArray($test->aaData);
+        $test = $this->c->output();
+        $this->assertIsArray($test['aaData']);
     }
 
-    public function testComplex()
+    public function test_complex()
     {
         $engine = new QueryEngine($this->builder);
 
@@ -143,8 +144,8 @@ class QueryEngineTest extends TestCase
         $engine->searchColumns('foo', 'bar');
         $engine->setAliasMapping();
 
-        Input::replace(['sSearch' => 't']);
-        $test = json_decode($engine->make()->getContent())->aaData;
+        Request::replace(['sSearch' => 't']);
+        $test = $engine->output()['aaData'];
 
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Nils', $test));
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Taylor', $test));
@@ -155,8 +156,8 @@ class QueryEngineTest extends TestCase
         $engine->searchColumns('foo', 'bar');
         $engine->setAliasMapping();
 
-        Input::replace(['sSearch' => 'plasch']);
-        $test = json_decode($engine->make()->getContent())->aaData;
+        Request::replace(['sSearch' => 'plasch']);
+        $test = $engine->output()['aaData'];
 
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Nils', $test));
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Taylor', $test));
@@ -167,8 +168,8 @@ class QueryEngineTest extends TestCase
         $engine->searchColumns('foo', 'bar');
         $engine->setAliasMapping();
 
-        Input::replace(['sSearch' => 'tay']);
-        $test = json_decode($engine->make()->getContent())->aaData;
+        Request::replace(['sSearch' => 'tay']);
+        $test = $engine->output()['aaData'];
 
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Nils', $test));
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Taylor', $test));
@@ -179,8 +180,8 @@ class QueryEngineTest extends TestCase
         $engine->searchColumns('foo', 'bar');
         $engine->setAliasMapping();
 
-        Input::replace(['sSearch' => '0']);
-        $test = json_decode($engine->make()->getContent())->aaData;
+        Request::replace(['sSearch' => '0']);
+        $test = $engine->output()['aaData'];
 
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Nils', $test));
         $this->assertTrue($this->arrayHasKeyValue('foo', 'Taylor', $test));
@@ -196,11 +197,11 @@ class QueryEngineTest extends TestCase
     {
         return [
             [
-                'name'  => 'Nils Plaschke',
+                'name' => 'Nils Plaschke',
                 'email' => 'github@nilsplaschke.de',
             ],
             [
-                'name'  => 'Taylor Otwell',
+                'name' => 'Taylor Otwell',
                 'email' => 'taylorotwell@gmail.com',
             ],
         ];
@@ -208,8 +209,8 @@ class QueryEngineTest extends TestCase
 
     private function addRealColumns(QueryEngine $engine): void
     {
-        $engine->addColumn(new FunctionColumn('foo', fn($m) => $m['name']));
-        $engine->addColumn(new FunctionColumn('bar', fn($m) => $m['email']));
+        $engine->addColumn(new FunctionColumn('foo', fn ($m) => $m['name']));
+        $engine->addColumn(new FunctionColumn('bar', fn ($m) => $m['email']));
     }
 
     private function arrayHasKeyValue(string $key, string $value, array $array): bool
@@ -220,6 +221,7 @@ class QueryEngineTest extends TestCase
                 return true;
             }
         }
+
         return false;
     }
 }

@@ -2,12 +2,12 @@
 
 namespace Chumptable\Datatable\Tests;
 
-use Orchestra\Testbench\TestCase as BaseTestCase;
 use Chumptable\Datatable\DatatableServiceProvider;
+use Chumptable\Datatable\Facades\DatatableFacade;
+use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-
     protected function getPackageProviders($app)
     {
         return [
@@ -18,7 +18,7 @@ abstract class TestCase extends BaseTestCase
     protected function getPackageAliases($app)
     {
         return [
-            'Datatable' => \Chumptable\Datatable\Facades\DatatableFacade::class,
+            'Datatable' => DatatableFacade::class,
         ];
     }
 }

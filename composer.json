@@ -11,23 +11,23 @@
     "homepage": "http://github.com/fajarsulaksono/chumptable",
     "authors": [
         {
-            "name": "Nils Plaschke",
-            "email": "github@nilsplaschke.de",
-            "homepage": "http://nilsplaschke.de",
-            "role": "Developer"
+            "name": "Fajar Sulaksono",
+            "email": "fajar.sulaksono@gmail.com",
+            "homepage": "https://github.com/fajarsulaksono",
+            "role": "Maintainer"
         }
     ],
-    "version": "1.0.0",
     "require": {
-        "php": "^7.2|^8.0",
-        "illuminate/support": "^5.0|^6.0|^7.0|^8.0|^9.0",
-        "illuminate/view": "^5.0|^6.0|^7.0|^8.0|^9.0",
-        "illuminate/config": "^5.0|^6.0|^7.0|^8.0|^9.0"
+        "php": "^8.2|^8.3|^8.4",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/view": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/config": "^10.0|^11.0|^12.0|^13.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "7.5.20",
-        "mockery/mockery": "1.3.6",
-        "orchestra/testbench": "3.8.0"
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^11.5",
+        "mockery/mockery": "^1.6",
+        "laravel/pint": "^1.24"
     },
     "autoload": {
         "psr-4": {

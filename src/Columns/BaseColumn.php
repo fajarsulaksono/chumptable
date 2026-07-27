@@ -19,7 +19,7 @@ abstract class BaseColumn
     /**
      * BaseColumn constructor.
      *
-     * @param string $name
+     * @param  string  $name
      */
     public function __construct($name)
     {
@@ -29,8 +29,8 @@ abstract class BaseColumn
     /**
      * Run the column transformation.
      *
-     * @param mixed $model The data to pass to the column,
-     *                     could be a model or an array.
+     * @param  mixed  $model  The data to pass to the column,
+     *                        could be a model or an array.
      * @return mixed The return value of the implementation,
      *               should be text in most of the cases.
      */
