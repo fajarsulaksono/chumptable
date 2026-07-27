@@ -1,66 +1,66 @@
 Chumptable
 =========
 
-# ChumpTable (Laravel Datatable Fork)
+# Chumptable (Laravel DataTable Fork)
 
-Chumptable adalah paket Laravel untuk membantu pembuatan server-side dan client-side DataTables (http://datatables.net/).
+Chumptable is a Laravel package that simplifies building server-side and client-side DataTables (http://datatables.net/).
 
-Ringkasan
----------
+Overview
+--------
 
-Paket ini merupakan fork yang tetap dipelihara dari Chumper/Datatable, diperbarui untuk mendukung PHP >= 8.0 dan Laravel 9 ke atas.
+This project is a maintained fork of Chumper/Datatable, updated to support PHP 8.0+ and recent Laravel versions.
 
-Persyaratan
------------
+Requirements
+------------
 
 - PHP 8.0+
-- Laravel 9, 10, 11, 12 atau 13 (lihat `composer.json`)
+- Laravel 9, 10, 11, 12 or 13 (see `composer.json`)
 
-Instalasi
----------
+Installation
+------------
 
-Jalankan:
+Install via Composer:
 
 ```bash
 composer require fajarsulaksono/chumptable
 ```
 
-Package discovery Laravel akan mendaftarkan service provider dan alias secara otomatis. Untuk mempublikasikan konfigurasi (opsional):
+Laravel package discovery will register the service provider and alias automatically. To publish the package configuration (optional):
 
 ```bash
-php artisan vendor:publish --provider="Chumptable\Datatable\DatatableServiceProvider" --tag=config
+php artisan vendor:publish --provider="Chumptable\\Datatable\\DatatableServiceProvider" --tag=config
 ```
 
-Fitur utama
------------
+Main features
+-------------
 
-- Engine untuk berbagai sumber data: Query (Eloquent/QueryBuilder) dan Collection.
+- Engines for different data sources: Query (Eloquent/QueryBuilder) and Collection.
 - Column helpers: `TextColumn`, `DateColumn`, `FunctionColumn`.
-- View template untuk tabel dan skrip DataTables, dapat di-override melalui konfigurasi.
-- Facade `Datatable` untuk API yang nyaman di controller/route.
+- View templates for table HTML and DataTables script; templates are overrideable via configuration.
+- Facade `Datatable` for convenient usage in controllers and routes.
 
-Komponen yang tersedia
-----------------------
+Available components
+--------------------
 
 - Engines: `QueryEngine`, `CollectionEngine`, `BaseEngine`.
 - Columns: `TextColumn`, `DateColumn`, `FunctionColumn`.
-- Service provider: `DatatableServiceProvider` (mendaftarkan binding `datatable`).
+- Service provider: `DatatableServiceProvider` (binds `datatable` into the container).
 
-Contoh penggunaan singkat
--------------------------
+Quick usage examples
+--------------------
 
-1) Dari query (server-side / Eloquent / QueryBuilder):
+1) From a query (server-side / Eloquent / QueryBuilder):
 
 ```php
-use Datatable; // alias Facade
+use Datatable; // facade alias
 
 $response = Datatable::of($query)
 	->showColumns('id', 'name', 'email')
 	->searchColumns('name', 'email')
-	->make(); // mengembalikan JSON Response untuk DataTables
+	->make(); // returns a JSON response for DataTables
 ```
 
-2) Dari collection (client-side):
+2) From a collection (client-side):
 
 ```php
 use Datatable;
@@ -70,7 +70,7 @@ $response = Datatable::collection($collection)
 	->make();
 ```
 
-3) Membuat table HTML + script menggunakan helper `table()`:
+3) Generate table HTML + script using the `table()` helper:
 
 ```php
 use Datatable;
@@ -80,26 +80,26 @@ $tableHtml = Datatable::table()
 	->setUrl(route('my.datatable.route'))
 	->render();
 
-// lalu tampung $tableHtml di view
+// then place $tableHtml into your view
 ```
 
-Konfigurasi & views
--------------------
+Configuration & views
+---------------------
 
-Konfigurasi default dan view bawaan dapat dipublikasikan dan disesuaikan. Lokasi konfigurasi bawaan berada pada paket dan dapat dipublish ke `config/chumptable.php`. Template view paket tersedia di namespace view paket.
+Default configuration and bundled views can be published and customized. The package configuration publishes to `config/chumptable.php`. View templates are provided by the package and can be overridden in your application's view namespace.
 
-Contributing & Testing
+Contributing & testing
 -----------------------
 
-Tes unit menggunakan `orchestra/testbench` dan `phpunit` (lihat `composer.json`). Jika ingin menjalankan tes lokal:
+Unit tests use `orchestra/testbench` and `phpunit` (see `composer.json`). To run tests locally:
 
 ```bash
 composer install --dev
 ./vendor/bin/phpunit
 ```
 
-Lisensi
-------
+License
+-------
 
-Paket ini berlisensi MIT. Lihat `composer.json` untuk detail.
+This package is licensed under the MIT license. See `composer.json` for details.
 
