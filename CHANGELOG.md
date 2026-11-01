@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-11-01
+## [2.1.0] - 2026-11-01
 
 ### Added
 
@@ -34,6 +34,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Numeric table columns are mapped using zero-based indexes instead of one-based indexes.
 - Table script rendering uses the configured/overridden `script_view` instead of reading the wrong config key.
+
+## [2.0.2] - 2026-07-27
+
+### Changed
+
+- Translated README to English.
+
+## [2.0.1] - 2026-07-27
+
+### Changed
+
+- Updated README with latest project information.
+
+## [2.0.0] - 2026-07-27
+
+### Added
+
+- Laravel 9, 10, 11, 12, and 13 support.
+- PHP 8.0+ support.
+
+### Changed
+
+- Renamed the package to `fajarsulaksono/chumptable`.
 
 ## [1.0.0] - 2025-09-07
 
