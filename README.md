@@ -31,6 +31,8 @@ Laravel package discovery will register the service provider and alias automatic
 php artisan vendor:publish --provider="Chumptable\\Datatable\\DatatableServiceProvider" --tag=config
 ```
 
+This publishes `config/datatable.php`.
+
 Main features
 -------------
 
@@ -83,10 +85,53 @@ $tableHtml = Datatable::table()
 // then place $tableHtml into your view
 ```
 
+DataTables 2.x support
+----------------------
+
+Both the legacy DataTables 1.x protocol and the DataTables 1.10+/2.x protocol are supported. Server-side responses are auto-detected from the request (`draw`, `start`, `length`, `search[...]`, `order[...]`, `columns[...]`), so DataTables 2.x clients receive the modern response format automatically.
+
+Select the protocol for generated table markup and client options in `config/datatable.php`:
+
+```php
+return [
+    // "1.x" keeps the legacy protocol (sEcho, iDisplayStart, aaData, ...)
+    // "2.x" uses draw/start/length/recordsTotal/recordsFiltered/data and
+    // modern client option names (ajax, serverSide, columns, order, ...)
+    'version' => '2.x',
+
+    // ...
+];
+```
+
+You can also select the version at runtime:
+
+```php
+use Datatable;
+
+$response = Datatable::of($query)
+    ->setDatatablesVersion('2.x')
+    ->showColumns('id', 'name', 'email')
+    ->searchColumns('name', 'email')
+    ->make();
+
+// Table HTML + script
+$html = Datatable::setDatatablesVersion('2.x')
+    ->table()
+    ->addColumn('Name', 'Email')
+    ->setUrl(route('my.datatable.route'))
+    ->render();
+```
+
+When `version` is `2.x`, legacy option names passed to `Table::setOptions()`,
+`Table::setUrl()`, `Table::setOrder()`, or published configuration (for example
+`sAjaxSource`, `bServerSide`, `aoColumns`, `mData`, `aaSorting`,
+`sPaginationType`, and `bProcessing`) are translated automatically to their
+DataTables 2.x equivalents.
+
 Configuration & views
 ---------------------
 
-Default configuration and bundled views can be published and customized. The package configuration publishes to `config/chumptable.php`. View templates are provided by the package and can be overridden in your application's view namespace.
+Default configuration and bundled views can be published and customized. The package configuration publishes to `config/datatable.php`. View templates are provided by the package and can be overridden in your application's view namespace.
 
 Contributing & testing
 -----------------------

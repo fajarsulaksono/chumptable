@@ -1,6 +1,6 @@
 {
     "name": "fajarsulaksono/chumptable",
-    "description": "This is a Laravel package for the server and client side of datatables at http://datatables.net/",
+    "description": "Laravel package for the server and client side of DataTables 1.x and 2.x (http://datatables.net/)",
     "keywords": [
         "laravel",
         "datatables",

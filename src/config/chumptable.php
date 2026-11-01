@@ -4,6 +4,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | DataTables protocol version
+    |--------------------------------------------------------------------------
+    |
+    | Supported: "1.x", "2.x"
+    |
+    | "1.x" keeps the legacy server-side protocol (sEcho, iDisplayStart,
+    | aaData, ...) and legacy client options.
+    |
+    | "2.x" enables the DataTables 1.10+/2.x protocol (draw, start, length,
+    | recordsTotal, recordsFiltered, data, ...) and translates the legacy
+    | client option names below to their modern equivalents.
+    |
+    */
+
+    'version' => '1.x',
+
+    /*
+    |--------------------------------------------------------------------------
     | Table specific configuration options.
     |--------------------------------------------------------------------------
     |
@@ -92,7 +110,7 @@ return [
         |
         */
 
-        'table_view' => 'datatable::template',
+        'table_view' => 'chumptable::template',
 
         /*
         |--------------------------------------------------------------------------
@@ -104,7 +122,7 @@ return [
         |
         */
 
-        'script_view' => 'datatable::javascript',
+        'script_view' => 'chumptable::javascript',
 
     ],
 

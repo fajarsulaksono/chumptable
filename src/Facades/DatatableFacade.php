@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Chumptable\Datatable\Engines\QueryEngine query($query)
  * @method static \Chumptable\Datatable\Engines\CollectionEngine collection($collection)
  * @method static \Chumptable\Datatable\Table table()
+ * @method static \Chumptable\Datatable\Datatable setDatatablesVersion(string $version)
+ * @method static string|null getDatatablesVersion()
+ * @method static \Chumptable\Datatable\Datatable setOutputFormat(string $format)
+ * @method static string getOutputFormat()
  * @method static bool shouldHandle()
  *
  * @see Datatable

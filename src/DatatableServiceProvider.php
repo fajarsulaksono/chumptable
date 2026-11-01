@@ -10,11 +10,13 @@ class DatatableServiceProvider extends ServiceProvider
     {
         // Publish config
         $this->publishes([
-            __DIR__.'/config/chumptable.php' => config_path('chumptable.php'),
+            __DIR__.'/config/chumptable.php' => config_path('datatable.php'),
         ], 'config');
 
-        // Load views
+        // Load views. The "datatable" namespace is kept for backwards
+        // compatibility with configurations that still reference it.
         $this->loadViewsFrom(__DIR__.'/resources/views', 'chumptable');
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'datatable');
     }
 
     /**
@@ -24,6 +26,8 @@ class DatatableServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__.'/config/chumptable.php', 'datatable');
+
         $this->app->singleton('datatable', function ($app) {
             return new Datatable;
         });

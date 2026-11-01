@@ -71,6 +71,10 @@ class BaseEngineTest extends TestCase
             ->with('datatable.engine', [])
             ->andReturn([]);
 
+        $this->config->shouldReceive('get')
+            ->with('datatable.version', '1.x')
+            ->andReturn('1.x');
+
         // daftarkan ke container supaya helper config() bisa resolve
         Container::getInstance()->instance('config', $this->config);
 
@@ -645,6 +649,7 @@ class BaseEngineTest extends TestCase
     public function test_legacy_output()
     {
         $engine = new DummyEngine;
+        $engine->setOutputFormat('legacy');
 
         $json = $engine->toArray(); // pakai wrapper
 

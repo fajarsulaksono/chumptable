@@ -15,14 +15,23 @@ use Illuminate\Support\Facades\Request;
  */
 class Datatable
 {
-    protected $outputFormat = 'legacy'; // 'legacy'
+    const DATATABLES_VERSION_1 = BaseEngine::DATATABLES_VERSION_1;
+
+    const DATATABLES_VERSION_2 = BaseEngine::DATATABLES_VERSION_2;
+
+    protected $outputFormat = null; // null = follow the configured version
+
+    /**
+     * @var string|null
+     */
+    protected $datatablesVersion = null;
 
     /**
      * @return QueryEngine
      */
     public function query($query)
     {
-        return new QueryEngine($query);
+        return $this->applyVersion(new QueryEngine($query));
     }
 
     /**
@@ -30,7 +39,7 @@ class Datatable
      */
     public function collection($collection)
     {
-        return new CollectionEngine($collection);
+        return $this->applyVersion(new CollectionEngine($collection));
     }
 
     /**
@@ -38,7 +47,53 @@ class Datatable
      */
     public function table()
     {
-        return new Table;
+        $table = new Table;
+
+        if ($this->datatablesVersion !== null) {
+            $table->setDatatablesVersion($this->datatablesVersion);
+        }
+
+        return $table;
+    }
+
+    /**
+     * Set the DataTables protocol version for engines and tables created
+     * through this instance.
+     *
+     * @return $this
+     */
+    public function setDatatablesVersion(string $version)
+    {
+        $this->datatablesVersion = str_starts_with(strtolower(trim($version)), '2')
+            ? self::DATATABLES_VERSION_2
+            : self::DATATABLES_VERSION_1;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getDatatablesVersion()
+    {
+        return $this->datatablesVersion;
+    }
+
+    /**
+     * @param  BaseEngine  $engine
+     * @return BaseEngine
+     */
+    protected function applyVersion($engine)
+    {
+        if ($this->datatablesVersion !== null) {
+            $engine->setDatatablesVersion($this->datatablesVersion);
+        }
+
+        if ($this->outputFormat !== null) {
+            $engine->setOutputFormat($this->outputFormat);
+        }
+
+        return $engine;
     }
 
     /**
@@ -46,7 +101,8 @@ class Datatable
      */
     public function shouldHandle()
     {
-        $echo = Request::input('sEcho', null);
+        // DataTables 1.9 uses sEcho, DataTables 1.10+/2.x uses draw.
+        $echo = Request::input('draw', Request::input('sEcho', null));
 
         if (/* request()->ajax() && */ ! is_null($echo) && is_numeric($echo)) {
             return true;
@@ -73,7 +129,11 @@ class Datatable
      */
     public function getOutputFormat()
     {
-        return $this->outputFormat;
+        if ($this->outputFormat !== null) {
+            return $this->outputFormat;
+        }
+
+        return $this->datatablesVersion === self::DATATABLES_VERSION_2 ? 'modern' : 'legacy';
     }
 
     /**

@@ -41,7 +41,7 @@
 
 @if (! $noScript)
 @include(
-config('chumptable.table.script_view'),
+$script_view ?? config('datatable.table.script_view'),
 [
 'id' => $id,
 'options' => $options,

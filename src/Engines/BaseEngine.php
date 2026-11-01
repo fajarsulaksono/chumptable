@@ -18,11 +18,34 @@ abstract class BaseEngine
     const ORDER_DESC = 'desc';
 
     /**
-     * Output format: 'legacy' (aaData) atau 'modern' (data)
+     * DataTables protocol versions.
+     */
+    const DATATABLES_VERSION_1 = '1.x';
+
+    const DATATABLES_VERSION_2 = '2.x';
+
+    /**
+     * DataTables protocol version used to interpret requests and build responses.
      *
      * @var string
      */
-    protected $outputFormat = 'legacy';
+    protected $datatablesVersion = self::DATATABLES_VERSION_1;
+
+    /**
+     * Output format: 'legacy' (aaData) atau 'modern' (data).
+     *
+     * Null means auto-detect from the request/protocol version.
+     *
+     * @var string|null
+     */
+    protected $outputFormat = null;
+
+    /**
+     * Whether the current request uses the DataTables 1.10+/2.x format.
+     *
+     * @var bool
+     */
+    protected $modernRequest = false;
 
     /**
      * @var array
@@ -132,6 +155,13 @@ abstract class BaseEngine
      */
     protected $additionalData = null;
 
+    /**
+     * Column definitions received from a DataTables 1.10+/2.x request.
+     *
+     * @var array
+     */
+    protected $requestColumns = [];
+
     public function __construct()
     {
         $this->columns = collect();
@@ -139,6 +169,81 @@ abstract class BaseEngine
 
         $this->setExactWordSearch($this->config['exactWordSearch'] ?? false);
         $this->setEnableDisplayAll($this->config['enableDisplayAll'] ?? false);
+
+        $version = $this->config['version'] ?? config('datatable.version', self::DATATABLES_VERSION_1);
+
+        $this->setDatatablesVersion(
+            is_scalar($version) ? (string) $version : self::DATATABLES_VERSION_1
+        );
+    }
+
+    /**
+     * Set the DataTables protocol version.
+     *
+     * Accepted values: "1", "1.x", "1.10", "2", "2.x", "2.0".
+     * Version 2 uses the modern request/response format by default.
+     *
+     * @return $this
+     */
+    public function setDatatablesVersion(string $version)
+    {
+        $this->datatablesVersion = $this->normalizeVersion($version);
+
+        return $this;
+    }
+
+    /**
+     * Resolve the response format for the current request.
+     *
+     * An explicit setOutputFormat() call always wins. Otherwise the request
+     * format is detected (DataTables 1.10+/2.x), falling back to the
+     * configured protocol version.
+     *
+     * @return string
+     */
+    protected function resolveOutputFormat()
+    {
+        if ($this->outputFormat !== null) {
+            return $this->outputFormat;
+        }
+
+        if ($this->modernRequest) {
+            return 'modern';
+        }
+
+        return $this->isDatatables2() ? 'modern' : 'legacy';
+    }
+
+    /**
+     * @return string
+     */
+    public function getDatatablesVersion()
+    {
+        return $this->datatablesVersion;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDatatables2()
+    {
+        return $this->datatablesVersion === self::DATATABLES_VERSION_2;
+    }
+
+    /**
+     * Normalize a user supplied DataTables version.
+     *
+     * @return string
+     */
+    protected function normalizeVersion(string $version)
+    {
+        $version = strtolower(trim($version));
+
+        if (str_starts_with($version, '2')) {
+            return self::DATATABLES_VERSION_2;
+        }
+
+        return self::DATATABLES_VERSION_1;
     }
 
     /**
@@ -233,8 +338,10 @@ abstract class BaseEngine
 
     protected function prepareEngine()
     {
-        $this->handleInputs();
+        // Resolve the default search columns before reading the request so
+        // per-column searches also work when searchColumns() was not called.
         $this->prepareSearchColumns();
+        $this->handleInputs();
     }
 
     /**
@@ -352,6 +459,8 @@ abstract class BaseEngine
 
     // ---------------- Protected Handlers -------------------
 
+    // DataTables 1.9 (legacy) parameters
+
     protected function handleiDisplayStart($value)
     {
         $this->skip($value);
@@ -359,17 +468,7 @@ abstract class BaseEngine
 
     protected function handleiDisplayLength($value)
     {
-        if (is_numeric($value)) {
-            if ($value > -1) {
-                $this->take($value);
-
-                return;
-            } elseif ($value == -1 && $this->enableDisplayAll) {
-                return; // Display all
-            }
-        }
-
-        $this->take($this->config['defaultDisplayLength'] ?? 10);
+        $this->handleLength($value);
     }
 
     protected function handlesEcho($value)
@@ -379,6 +478,16 @@ abstract class BaseEngine
 
     protected function handlesSearch($value)
     {
+        $this->handleSearch($value);
+    }
+
+    protected function handleSearch($value)
+    {
+        // DataTables 1.10+/2.x send search as an object: search[value], search[regex].
+        if (is_array($value)) {
+            $value = $value['value'] ?? null;
+        }
+
         $this->search($value);
     }
 
@@ -392,20 +501,7 @@ abstract class BaseEngine
             $direction[$value] = self::ORDER_ASC;
         }
 
-        $columns = [];
-        if (empty($this->orderColumns)) {
-            $columns[] = [0 => $value, 1 => '`'.$this->getNameByIndex($value).'`'];
-            $this->order($columns, $direction);
-
-            return;
-        }
-
-        $cleanNames = [];
-        foreach ($this->orderColumns as $c) {
-            $cleanNames[] = strpos($c, ':') !== false ? substr($c, 0, strpos($c, ':')) : $c;
-        }
-
-        $iSortingCols = request()->input('iSortingCols');
+        $iSortingCols = (int) request()->input('iSortingCols', 1);
         $sortingCols = [$value];
         for ($i = 1; $i < $iSortingCols; $i++) {
             $isc = request()->input('iSortCol_'.$i);
@@ -413,14 +509,7 @@ abstract class BaseEngine
             $direction[$isc] = request()->input('sSortDir_'.$i);
         }
 
-        $allColumns = array_keys($this->columns->all());
-        foreach ($sortingCols as $num) {
-            if (isset($allColumns[$num]) && in_array($allColumns[$num], $cleanNames)) {
-                $columns[] = [0 => $num, 1 => '`'.$this->orderColumns[array_search($allColumns[$num], $cleanNames)].'`'];
-            }
-        }
-
-        $this->order($columns, $direction);
+        $this->applyOrderColumns($sortingCols, $direction);
     }
 
     protected function handleSingleColumnSearch($columnIndex, $searchValue)
@@ -436,18 +525,216 @@ abstract class BaseEngine
         $this->searchOnColumn($columnName, $searchValue);
     }
 
+    // DataTables 1.10+/2.x parameters
+
+    protected function handleDraw($value)
+    {
+        $this->sEcho = $value;
+    }
+
+    protected function handleStart($value)
+    {
+        $this->skip((int) $value);
+    }
+
+    protected function handleLength($value)
+    {
+        if (is_numeric($value)) {
+            if ($value > -1) {
+                $this->take($value);
+
+                return;
+            } elseif ($value == -1 && $this->enableDisplayAll) {
+                return; // Display all
+            }
+        }
+
+        $this->take($this->config['defaultDisplayLength'] ?? 10);
+    }
+
+    /**
+     * Handle the DataTables 1.10+/2.x columns[] definition.
+     *
+     * Columns may contain a per-column search value and are also used to
+     * resolve column names when the client uses alias mapping.
+     */
+    protected function handleColumns($value)
+    {
+        if (! is_array($value)) {
+            return;
+        }
+
+        $this->requestColumns = $value;
+
+        foreach ($value as $index => $column) {
+            if (! is_array($column)) {
+                continue;
+            }
+
+            if (isset($column['searchable']) && ! filter_var($column['searchable'], FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+
+            $searchValue = $column['search']['value'] ?? null;
+            if ($searchValue === null || ($searchValue === '' && $searchValue !== '0')) {
+                continue;
+            }
+
+            $columnName = $this->resolveColumnName($index, $column);
+            if ($columnName === null) {
+                continue;
+            }
+
+            $searchableColumns = ! empty($this->searchColumns)
+                ? $this->searchColumns
+                : array_keys($this->columns->all());
+
+            if (! in_array($columnName, $searchableColumns, true)) {
+                continue;
+            }
+
+            $this->searchOnColumn($columnName, $searchValue);
+        }
+    }
+
+    /**
+     * Handle the DataTables 1.10+/2.x order[] definition.
+     */
+    protected function handleOrder($value)
+    {
+        if (! is_array($value)) {
+            return;
+        }
+
+        $direction = [];
+        $sortingCols = [];
+
+        foreach ($value as $order) {
+            if (! is_array($order) || ! isset($order['column'])) {
+                continue;
+            }
+
+            $index = (int) $order['column'];
+            $sortingCols[] = $index;
+
+            $dir = strtolower((string) ($order['dir'] ?? self::ORDER_ASC));
+            $direction[$index] = $dir === self::ORDER_DESC ? self::ORDER_DESC : self::ORDER_ASC;
+        }
+
+        if (! empty($sortingCols)) {
+            $this->applyOrderColumns($sortingCols, $direction);
+        }
+    }
+
+    /**
+     * Build the engine order definition from column indexes and directions.
+     */
+    protected function applyOrderColumns(array $sortingCols, array $direction)
+    {
+        $columns = [];
+
+        if (empty($this->orderColumns)) {
+            foreach ($sortingCols as $index) {
+                $columnName = $this->resolveColumnName($index, $this->requestColumns[$index] ?? []);
+                if ($columnName === null) {
+                    continue;
+                }
+
+                $columns[] = [0 => $index, 1 => '`'.$columnName.'`'];
+            }
+
+            if (! empty($columns)) {
+                $this->order($columns, $direction);
+            }
+
+            return;
+        }
+
+        $cleanNames = [];
+        foreach ($this->orderColumns as $c) {
+            $cleanNames[] = strpos($c, ':') !== false ? substr($c, 0, strpos($c, ':')) : $c;
+        }
+
+        $allColumns = array_keys($this->columns->all());
+        foreach ($sortingCols as $num) {
+            if (! isset($allColumns[$num])) {
+                continue;
+            }
+
+            $columnName = $allColumns[$num];
+            if (in_array($columnName, $cleanNames)) {
+                $columns[] = [0 => $num, 1 => '`'.$this->orderColumns[array_search($columnName, $cleanNames)].'`'];
+            }
+        }
+
+        if (! empty($columns)) {
+            $this->order($columns, $direction);
+        }
+    }
+
+    /**
+     * Resolve the engine column name for a DataTables column definition.
+     *
+     * @param  int|string  $index
+     * @return string|null
+     */
+    protected function resolveColumnName($index, array $column = [])
+    {
+        // The engine column order is the most reliable source, since it
+        // matches the order in which columns were registered for the table.
+        $name = $this->getNameByIndex($index);
+        if ($name !== null) {
+            return $name;
+        }
+
+        foreach (['data', 'name'] as $key) {
+            if (isset($column[$key]) && is_string($column[$key]) && $column[$key] !== '' && ! is_numeric($column[$key])) {
+                return $column[$key];
+            }
+        }
+
+        return null;
+    }
+
     protected function handleInputs()
     {
-        foreach (request()->all() as $key => $input) {
+        // DataTables 1.10+/2.x parameters. These are handled explicitly since
+        // PHP's method_exists() is case sensitive, while DataTables sends
+        // lower camelCase parameter names.
+        $modernHandlers = [
+            'draw' => 'handleDraw',
+            'start' => 'handleStart',
+            'length' => 'handleLength',
+            'search' => 'handleSearch',
+            'order' => 'handleOrder',
+            'columns' => 'handleColumns',
+        ];
+
+        $input = request()->all();
+
+        $this->modernRequest = array_key_exists('draw', $input) && (
+            array_key_exists('start', $input)
+            || array_key_exists('length', $input)
+            || array_key_exists('columns', $input)
+            || array_key_exists('order', $input)
+        );
+
+        foreach ($input as $key => $value) {
+            if (isset($modernHandlers[$key])) {
+                $this->{$modernHandlers[$key]}($value);
+
+                continue;
+            }
+
             if ($this->isParameterForSingleColumnSearch($key)) {
                 $columnIndex = str_replace('sSearch_', '', $key);
-                $this->handleSingleColumnSearch($columnIndex, $input);
+                $this->handleSingleColumnSearch($columnIndex, $value);
 
                 continue;
             }
 
             if (method_exists($this, $function = 'handle'.$key)) {
-                $this->$function($input);
+                $this->$function($value);
             }
         }
     }
@@ -545,8 +832,8 @@ abstract class BaseEngine
         $total = $this->totalCount();
         $filtered = $this->count();
 
-        if ($this->outputFormat === 'modern') {
-            // Format modern sesuai DataTables 1.10+
+        if ($this->resolveOutputFormat() === 'modern') {
+            // Format modern sesuai DataTables 1.10+/2.x
             return [
                 'draw' => intval($this->sEcho), // alias draw
                 'recordsTotal' => $total,
